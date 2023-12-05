@@ -162,6 +162,19 @@ export class EditOrder extends Component {
                       />
                     </Form.Group>
                   </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <label htmlFor="exampleInputName1">Delivery Charge</label>
+                      <Form.Control
+                        type="text"
+                        className="form-control"
+                        id="exampleInputName1"
+                        placeholder="Status"
+                        disabled
+                        value={order.pickup}
+                      />
+                    </Form.Group>
+                  </Col>
                 </Row>
                 <Row>
                   <Col md={12}>
@@ -218,6 +231,13 @@ export class EditOrder extends Component {
                         }}
                       >
                         Total: &#8358;{this.totalOrderCost()}
+                        {order.discount !== null && 0 && (
+                          <>
+                            {" "}
+                            Discount: &#8358;{order.discount}
+                            referrer: {order.referrer_code}
+                          </>
+                        )}
                       </td>
                     </tr>
                   </tbody>

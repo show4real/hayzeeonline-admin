@@ -221,7 +221,9 @@ export class CustomerOrderIndex extends Component {
                         <th> Customer Name </th>
                         <th> Phone </th>
                         <th> Order ID </th>
-
+                        <th> Order mode </th>
+                        <th> Payment Reference </th>
+                        <th> Discount </th>
                         <th> status </th>
                         <th> Date </th>
                         <th>Action</th>
@@ -239,6 +241,17 @@ export class CustomerOrderIndex extends Component {
 
                           <td style={{ textTransform: "capitalize" }}>
                             {order.id}{" "}
+                          </td>
+                          <td style={{ textTransform: "capitalize" }}>
+                            {order.payment_reference == null
+                              ? "Request"
+                              : "Paid online"}{" "}
+                          </td>
+                          <td style={{ textTransform: "capitalize" }}>
+                            {order.payment_reference}
+                          </td>
+                          <td style={{ textTransform: "capitalize" }}>
+                            {order.discount !== null ? order.discount : 0}
                           </td>
                           <td>
                             <ProgressBar
