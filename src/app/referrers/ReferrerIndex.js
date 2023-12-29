@@ -235,7 +235,7 @@ export class ReferrerIndex extends Component {
                             {referrer.user && referrer.user.name}{" "}
                           </td>
                           <td>{referrer.user && referrer.user.email} </td>
-                          <td style={{ textTransform: "capitalize" }}>
+                          <td>
                             {referrer.referral_code}
                           </td>
                           <td>
