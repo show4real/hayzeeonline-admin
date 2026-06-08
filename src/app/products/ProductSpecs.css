@@ -1,0 +1,230 @@
+/* Modern, refined product specification section (Jumia/Amazon style) */
+.spec-section {
+  background: #ffffff;
+  border: 1px solid #eef0f4;
+  border-radius: 14px;
+  padding: 24px 24px 10px;
+  margin-top: 26px;
+  box-shadow: 0 2px 14px rgba(17, 24, 39, 0.05);
+}
+
+.spec-section__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 18px;
+}
+
+.spec-field {
+  margin-bottom: 16px;
+}
+
+.spec-field__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.spec-field__label .req {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.spec-field__error {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+/* Refine the antd Select / Input to feel modern and rounded */
+.spec-field .ant-select .ant-select-selector,
+.spec-field .ant-input {
+  border-radius: 10px !important;
+  border-color: #e5e7eb !important;
+}
+
+.spec-field .ant-select:hover .ant-select-selector,
+.spec-field .ant-input:hover {
+  border-color: #93c5fd !important;
+}
+
+.spec-field .ant-select-focused .ant-select-selector,
+.spec-field .ant-input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.spec-field--error .ant-select .ant-select-selector,
+.spec-field--error .ant-input {
+  border-color: #ef4444 !important;
+}
+
+/* Roomy, grouped dropdown panel (POPULAR / OTHER), matching the screenshot */
+.spec-dropdown {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.14) !important;
+}
+
+.spec-dropdown .rc-virtual-list-holder-inner {
+  padding: 0 !important;
+}
+
+/* Each option: roomy rows with a thin divider, like the screenshot */
+.spec-dropdown .ant-select-item-option {
+  padding: 15px 18px;
+  font-size: 16px;
+  color: #1f2937;
+  border-radius: 0;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+/* Group heading (POPULAR / OTHER): a full-width tinted bar */
+.spec-dropdown .ant-select-item-group {
+  padding: 10px 18px;
+  margin: 0;
+  min-height: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #eef2f9;
+}
+
+.spec-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: #eff6ff;
+}
+
+.spec-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: #dbeafe;
+  font-weight: 600;
+}
+
+/* ---- Availability toggle ---- */
+.avail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  cursor: pointer;
+  margin: 0;
+}
+
+.avail-toggle .form-check-input {
+  position: static;
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.avail-toggle__text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ---- Other Sales pill buttons ---- */
+.sales-radio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sales-radio .ant-radio-button-wrapper {
+  border-radius: 8px !important;
+  border-left-width: 1px;
+  border-color: #e5e7eb;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.sales-radio .ant-radio-button-wrapper::before {
+  display: none;
+}
+
+.sales-radio .ant-radio-button-wrapper-checked {
+  border-color: #2563eb !important;
+  color: #fff !important;
+  background: #2563eb !important;
+}
+
+/* ---- Image upload ---- */
+.upload-area {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.upload-btn {
+  border-radius: 9px !important;
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.image-grid {
+  margin-top: 14px;
+}
+
+.image-grid__item {
+  position: relative;
+  border: 1px solid #eef0f4;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: #fff;
+}
+
+.image-grid__actions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.55);
+  color: #fff;
+  font-size: 20px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+}
+
+.image-grid__item:hover .image-grid__actions {
+  opacity: 1;
+}
+
+/* ---- Description editor ---- */
+.desc-quill .ql-toolbar {
+  border-radius: 10px 10px 0 0;
+  border-color: #e5e7eb;
+}
+
+.desc-quill .ql-container {
+  border-radius: 0 0 10px 10px;
+  border-color: #e5e7eb;
+  min-height: 150px;
+  font-size: 14px;
+}

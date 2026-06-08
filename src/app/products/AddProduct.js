@@ -8,11 +8,13 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
 import "./CustomFileInput.css";
+import "./ProductSpecs.css";
 import settings from "../services/settings";
 import { authService } from "../services/authService";
 import { getBrands, getCategories } from "../services/categoryService";
 import SpinDiv from "../components/SpinDiv";
-import { Select, Radio } from "antd";
+import { Select, Radio, Input as AntInput } from "antd";
+import { brandModels, fallbackBrandNames } from "./productSpecConfig";
 
 const AddProduct = ({ product, toggle, saved }) => {
   const [images, setImages] = useState([]);
@@ -20,7 +22,11 @@ const AddProduct = ({ product, toggle, saved }) => {
   const [brands, setBrands] = useState([]);
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [productInfos, setProductInfos] = useState([{ label: "", value: "" }]);
+  const [specs, setSpecs] = useState({});
+  const [specErrors, setSpecErrors] = useState({});
+  // Tracks the text the user is typing per spec field, so any field can offer
+  // an "add your own" custom value when nothing in the list matches.
+  const [fieldSearch, setFieldSearch] = useState({});
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [other_sales, setOtherSales] = useState(null);
@@ -237,6 +243,303 @@ const AddProduct = ({ product, toggle, saved }) => {
 
   const productTypes = ["Brand New", "UK Used", "Open Box", "US Used"];
 
+  // ---- Jiji-style specification options ----
+  const numberOfCores = [
+    "Dual-Core",
+    "Quad-Core",
+    "Hexa-Core",
+    "Octa-Core",
+    "10-Core",
+    "12-Core",
+    "14-Core",
+    "16-Core",
+  ];
+  const storageTypes = ["HDD", "SSD", "SSHD", "HDD + SSD", "NVMe SSD"];
+  const storageCapacities = [
+    "128GB",
+    "256GB",
+    "320GB",
+    "500GB",
+    "512GB",
+    "1TB",
+    "2TB",
+    "4TB",
+  ];
+  const displaySizes = [
+    "11.6 inches",
+    "12.5 inches",
+    "13.3 inches",
+    "14 inches",
+    "15.6 inches",
+    "17.3 inches",
+    "19 inches",
+    "21.5 inches",
+    "24 inches",
+    "27 inches",
+    "32 inches",
+  ];
+  const graphicsCards = [
+    "Intel UHD Graphics",
+    "Intel Iris Xe",
+    "NVIDIA GeForce GTX",
+    "NVIDIA GeForce RTX",
+    "AMD Radeon",
+    "Apple GPU",
+    "Not Specified",
+  ];
+  const graphicsCardMemories = [
+    "1GB",
+    "2GB",
+    "3GB",
+    "4GB",
+    "6GB",
+    "8GB",
+    "12GB",
+    "16GB",
+    "24GB",
+  ];
+  const operatingSystems = [
+    "iOS",
+    "iPadOS",
+    "Android",
+    "HarmonyOS",
+    "KaiOS",
+    "Windows 7",
+    "Windows 8",
+    "Windows 10",
+    "Windows 11",
+    "macOS",
+    "Linux",
+    "Chrome OS",
+    "No OS",
+  ];
+  const colors = [
+    "Black",
+    "Silver",
+    "Gray",
+    "Blue",
+    "White",
+    "Rose Gold",
+    "Gold",
+    "Red",
+    "Green",
+    "Pink",
+  ];
+  const subtypes = [
+    "Desktop Computer",
+    "Laptop",
+    "All-in-One",
+    "Workstation",
+    "Mini PC",
+    "Server",
+    "Monitor",
+  ];
+  const yesNo = ["Yes", "No"];
+
+  // ---- Grouped dropdown options (POPULAR / OTHER style, like the screenshot) ----
+  // An options value can be a flat array OR an array of { label, items } groups.
+  const storageCapacityGroups = [
+    { label: "Popular", items: ["64GB", "128GB", "256GB", "512GB", "1TB"] },
+    {
+      label: "Other",
+      items: ["16GB", "32GB", "320GB", "500GB", "2TB", "4TB"],
+    },
+  ];
+  const ramGroups = [
+    { label: "Popular", items: ["4GB", "6GB", "8GB", "12GB", "16GB"] },
+    {
+      label: "Other",
+      items: ["1GB", "2GB", "3GB", "24GB", "32GB", "64GB", "128GB", "256GB"],
+    },
+  ];
+  const displaySizeGroups = [
+    {
+      label: "Phone",
+      items: [
+        "5.4 inches",
+        "5.8 inches",
+        "6.1 inches",
+        "6.5 inches",
+        "6.7 inches",
+        "6.8 inches",
+      ],
+    },
+    {
+      label: "Tablet",
+      items: [
+        "8.3 inches",
+        "10.2 inches",
+        "10.9 inches",
+        "11 inches",
+        "12.9 inches",
+      ],
+    },
+    {
+      label: "Laptop & Monitor",
+      items: [
+        "11.6 inches",
+        "13.3 inches",
+        "14 inches",
+        "15.6 inches",
+        "17.3 inches",
+        "19 inches",
+        "21.5 inches",
+        "24 inches",
+        "27 inches",
+        "32 inches",
+      ],
+    },
+  ];
+
+  // Build grouped processor options (Intel / AMD / Apple / Other), de-duplicated.
+  const buildProcessorGroups = () => {
+    const seen = {};
+    const buckets = { Intel: [], AMD: [], Apple: [], Other: [] };
+    processors.forEach((p) => {
+      if (seen[p]) return;
+      seen[p] = true;
+      if (p.indexOf("Intel") === 0) buckets.Intel.push(p);
+      else if (p.indexOf("AMD") === 0) buckets.AMD.push(p);
+      else if (p.toLowerCase().indexOf("apple") !== -1) buckets.Apple.push(p);
+      else buckets.Other.push(p);
+    });
+    return Object.keys(buckets)
+      .filter((k) => buckets[k].length)
+      .map((k) => ({ label: k, items: buckets[k] }));
+  };
+  const processorGroups = buildProcessorGroups();
+
+  // brandModels & fallbackBrandNames now come from ./productSpecConfig
+
+  const normalizeName = (value) =>
+    (value || "").toString().trim().toLowerCase();
+
+  // Classify a category (by its name) into a kind so we can show only the
+  // specification fields that make sense for it.
+  const classifyCategory = (name) => {
+    const n = normalizeName(name);
+    if (!n) return "general";
+    if (/iphone|android|phone|smartphone|tecno|infinix|itel|nokia/.test(n))
+      return "phone";
+    if (/ipad|tablet|\btab\b/.test(n)) return "tablet";
+    if (/laptop|notebook|macbook|ultrabook/.test(n)) return "laptop";
+    if (
+      /desktop|imac|all.?in.?one|workstation|server|mini ?pc|computer|monitor/.test(
+        n
+      )
+    )
+      return "desktop";
+    if (
+      /accessor|charger|cable|headphone|earbud|earphone|airpod|case|cover|pouch|smart ?watch|watch|power ?bank|adapter|mouse|keyboard|speaker|memory card|sim/.test(
+        n
+      )
+    )
+      return "accessory";
+    return "general";
+  };
+
+  // Single flat list of specification fields rendered as a 2-column grid.
+  // `brand` and `category` stay as dedicated API-driven selects above this grid.
+  // All specification fields are optional. `kinds` controls which categories a
+  // field shows for ("all" = every category). Computer-only fields (processor,
+  // graphics, storage type…) are hidden for phones, tablets and accessories.
+  const COMPUTER = ["laptop", "desktop"];
+  const DEVICE = ["laptop", "desktop", "phone", "tablet"];
+  const specFields = [
+    {
+      name: "model",
+      label: "Model",
+      dependsOn: "brand",
+      placeholder: "Select a brand first",
+      kinds: ["all"],
+    },
+    { name: "subtype", label: "Subtype", options: subtypes, kinds: COMPUTER },
+    {
+      name: "condition",
+      label: "Condition",
+      options: productTypes,
+      kinds: ["all"],
+    },
+    {
+      name: "processor",
+      label: "Processor",
+      options: processorGroups,
+      kinds: COMPUTER,
+    },
+    {
+      name: "number_of_cores",
+      label: "Number of Cores",
+      options: numberOfCores,
+      kinds: COMPUTER,
+    },
+    { name: "ram", label: "RAM", options: ramGroups, kinds: DEVICE },
+    {
+      name: "storage_capacity",
+      label: "Storage Capacity",
+      options: storageCapacityGroups,
+      kinds: DEVICE,
+    },
+    {
+      name: "storage_type",
+      label: "Storage Type",
+      options: storageTypes,
+      kinds: COMPUTER,
+    },
+    {
+      name: "display_size",
+      label: "Display Size",
+      options: displaySizeGroups,
+      kinds: DEVICE,
+    },
+    {
+      name: "graphics_card",
+      label: "Graphics Card",
+      options: graphicsCards,
+      kinds: COMPUTER,
+    },
+    {
+      name: "graphics_card_memory",
+      label: "Graphics Card Memory",
+      options: graphicsCardMemories,
+      kinds: COMPUTER,
+    },
+    {
+      name: "operating_system",
+      label: "Operating System",
+      options: operatingSystems,
+      kinds: DEVICE,
+    },
+    { name: "color", label: "Color", options: colors, kinds: ["all"] },
+    {
+      name: "exchange_possible",
+      label: "Exchange Possible",
+      options: yesNo,
+      kinds: ["all"],
+    },
+  ];
+
+  // Detects whether a field's options are grouped ({ label, items }) vs flat.
+  const isGroupedOptions = (opts) =>
+    Array.isArray(opts) && opts.length > 0 && typeof opts[0] === "object";
+
+  // Backend brands merged with our fallback list (deduped by name). Backend
+  // brands keep their numeric id; fallback-only brands use their name as value.
+  const mergedBrands = (() => {
+    const seen = {};
+    const list = [];
+    (brands || []).forEach((b) => {
+      if (!b || !b.name) return;
+      seen[normalizeName(b.name)] = true;
+      list.push({ id: b.id, name: b.name });
+    });
+    fallbackBrandNames.forEach((name) => {
+      if (seen[normalizeName(name)]) return;
+      seen[normalizeName(name)] = true;
+      list.push({ id: name, name });
+    });
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
   const laptopProperties = [
     {
       name: "Processor",
@@ -347,6 +650,35 @@ const AddProduct = ({ product, toggle, saved }) => {
     ram: "",
     product_type: "",
   });
+
+  // Resolve the selected brand's name, then its detailed model catalogue.
+  // Declared after `fields` so it can read the current brand selection.
+  const selectedBrand = mergedBrands.find(
+    (b) => String(b.id) === String(fields.brand)
+  );
+  const selectedBrandName = selectedBrand ? selectedBrand.name : "";
+  const modelOptions = brandModels[normalizeName(selectedBrandName)] || [];
+  // Is the typed text already one of a field's options (flat or grouped)?
+  const optionExists = (options, value) =>
+    (isGroupedOptions(options)
+      ? options.reduce((acc, g) => acc.concat(g.items), [])
+      : options || []
+    ).some((opt) => normalizeName(opt) === normalizeName(value));
+
+  // Resolve the selected category's kind, then the spec fields that apply to it.
+  const selectedCategory = (categories || []).find(
+    (c) => String(c.id) === String(fields.category)
+  );
+  const categoryKind = classifyCategory(
+    selectedCategory ? selectedCategory.name : ""
+  );
+  const visibleSpecFields = specFields.filter(
+    (field) =>
+      categoryKind === "general" ||
+      field.kinds.includes("all") ||
+      field.kinds.includes(categoryKind)
+  );
+
   const [errors, setErrors] = useState({
     name: "",
     category: "",
@@ -516,19 +848,9 @@ const AddProduct = ({ product, toggle, saved }) => {
     setImages(images.filter((s, sidx) => idx !== sidx));
   };
 
-  const handleAddProductInfo = () => {
-    setProductInfos(productInfos.concat([{ label: "", value: "" }]));
-  };
-
-  const handleRemoveProductInfo = (key) => () => {
-    setProductInfos(productInfos.filter((s, skey) => key !== skey));
-  };
-
-  const handleInputChange = (e, index) => {
-    const { name, value } = e.target;
-    const list = [...productInfos];
-    list[index][name] = value;
-    setProductInfos(list);
+  const handleSpecChange = (name, value) => {
+    setSpecs((prev) => ({ ...prev, [name]: value }));
+    setSpecErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleOtherSaleChange = (e) => {
@@ -559,6 +881,7 @@ const AddProduct = ({ product, toggle, saved }) => {
       validationErrors.price = "Price is required";
     }
 
+    // Specification fields are optional — no per-field required validation.
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -580,23 +903,33 @@ const AddProduct = ({ product, toggle, saved }) => {
       data.append("images[]", image.blob, image.name);
     });
 
-    for (var i in productInfos) {
-      data.set(`labels[${i}]`, productInfos[i].label);
-      data.set(`values[${i}]`, productInfos[i].value);
-    }
+    // Only send specs relevant to the selected category, and only if filled.
+    const filledSpecFields = visibleSpecFields.filter(
+      (field) => specs[field.name]
+    );
+
+    // Build specification label/value pairs from the grid (only filled fields)
+    filledSpecFields.forEach((field, i) => {
+      data.set(`labels[${i}]`, field.label);
+      data.set(`values[${i}]`, specs[field.name]);
+    });
 
     data.set("name", fields.name);
     other_sales !== null && data.set("other_sales", other_sales);
     data.set("product_type", fields.product_type);
-    data.set("ram", fields.ram);
     data.set("category", fields.category);
     data.set("brand", fields.brand);
-    data.set("storage", fields.storage);
-    data.set("processor", fields.processor);
+    // Keep dedicated columns populated for backward compatibility
+    data.set("ram", specs.ram || "");
+    data.set("storage", specs.storage_capacity || "");
+    data.set("processor", specs.processor || "");
     data.set("description", description);
     data.set("availability", status ? 1 : 0);
     data.set("price", price);
-    data.set("product_infos", productInfos);
+    // Send each relevant specification field raw (one key per spec)
+    filledSpecFields.forEach((field) => {
+      data.set(field.name, specs[field.name]);
+    });
 
     return axios
       .post(
@@ -734,225 +1067,271 @@ const AddProduct = ({ product, toggle, saved }) => {
               </Row>
               <Row></Row>
 
-              <Row>
-                <Col md={6}>
-                  <Form.Group>
-                    <label className="label">Category</label>
-                    <select
-                      className="form-control"
-                      id="exampleFormControlSelect2"
-                      name="category"
-                      value={fields.category}
-                      onChange={handleProductInput}
-                    >
-                      <option value="">Choose Category</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div>
-                      <span
-                        style={{
-                          paddingTop: 10,
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                        className="text-danger"
-                      >
-                        {errors.category}
-                      </span>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <label className="label">Brand</label>
-                    <select
-                      className="form-control"
-                      id="exampleFormControlSelect2"
-                      name="brand"
-                      value={fields.brand}
-                      onChange={handleProductInput}
-                    >
-                      <option value="">Choose Brand</option>
-                      {brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div>
-                      <span
-                        style={{
-                          paddingTop: 10,
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                        className="text-danger"
-                      >
-                        {errors.brand}
-                      </span>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <label className="label">Storages</label>
-                    <select
-                      className="form-control"
-                      id="exampleFormControlSelect2"
-                      name="storage"
-                      value={fields.storages}
-                      onChange={handleProductInput}
-                    >
-                      <option value="">Choose Storage</option>
-                      {storages.map((storage, key) => (
-                        <option key={key} value={storage}>
-                          {storage}
-                        </option>
-                      ))}
-                    </select>
-                    <div>
-                      <span
-                        style={{
-                          paddingTop: 10,
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                        className="text-danger"
-                      >
-                        {errors.storage}
-                      </span>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <label className="label">Processor</label>
-                    <select
-                      className="form-control"
-                      id="exampleFormControlSelect3"
-                      name="processor"
-                      value={fields.processor}
-                      onChange={handleProductInput}
-                    >
-                      <option value="">Choose Processor</option>
-                      {processors.map((processor, key) => (
-                        <option key={key} value={processor}>
-                          {processor}
-                        </option>
-                      ))}
-                    </select>
-                    <div>
-                      <span
-                        style={{
-                          paddingTop: 10,
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                        className="text-danger"
-                      >
-                        {errors.processor}
-                      </span>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <label className="label">RAM</label>
-                    <select
-                      className="form-control"
-                      id="exampleFormControlSelect3"
-                      name="ram"
-                      value={fields.ram}
-                      onChange={handleProductInput}
-                    >
-                      <option value="">Choose RAM size</option>
-                      {rams.map((ram, key) => (
-                        <option key={key} value={ram}>
-                          {ram}
-                        </option>
-                      ))}
-                    </select>
-                    <div>
-                      <span
-                        style={{
-                          paddingTop: 10,
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                        className="text-danger"
-                      >
-                        {errors.ram}
-                      </span>
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group>
-                    <label
-                      className="label"
-                      style={{ display: "block", paddingRight: 20 }}
-                    >
-                      {" "}
-                      Availability
-                    </label>
-                    <Input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={status}
-                      onChange={handleStatus}
-                    />
-                    <i className="input-helper"></i>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <label
-                    className="label"
-                    style={{ display: "block", paddingRight: 20 }}
-                  >
-                    {" "}
-                    Other Sales
-                  </label>
-                  <Radio.Group
-                    onChange={handleOtherSaleChange}
-                    defaultValue={other_sales}
-                  >
-                    <Radio.Button value={null}>None</Radio.Button>
-                    <Radio.Button value="flash sales">Flash Sales</Radio.Button>
-                    <Radio.Button value="PRE-ORDER (24Hours)">
-                      {" "}
-                      PRE-ORDER (24Hours)
-                    </Radio.Button>
-                    <Radio.Button value="PRE-ORDER (7DAYS)">
-                      PRE-ORDER (7DAYS)
-                    </Radio.Button>
-                    <Radio.Button value="PRE-ORDER (21DAYS)">
-                      PRE-ORDER (21DAYS)
-                    </Radio.Button>
-                    <Radio.Button value="mid year sales">
-                      Mid Year Sales
-                    </Radio.Button>
-                    <Radio.Button value="promo sales">Promo Sales</Radio.Button>
-                    <Radio.Button value="black friday">
-                      Black Friday
-                    </Radio.Button>
-                  </Radio.Group>
-                </Col>
-              </Row>
+              <div className="spec-section">
+                <div className="spec-section__title">Specifications</div>
 
-              <Row>
-                <Col lg="12">
-                  <label className="label" style={{ display: "block" }}>
-                    Product Image
-                  </label>
-                  <>
-                    <Button onClick={handleClick}>
-                      {" "}
+                <Row>
+                  <Col md={6}>
+                    <div
+                      className={`spec-field${
+                        errors.category ? " spec-field--error" : ""
+                      }`}
+                    >
+                      <label className="spec-field__label">
+                        Category<span className="req">*</span>
+                      </label>
+                      <Select
+                        showSearch
+                        allowClear
+                        size="large"
+                        style={{ width: "100%" }}
+                        popupClassName="spec-dropdown"
+                        placeholder="Search & choose category"
+                        optionFilterProp="children"
+                        value={fields.category || undefined}
+                        onChange={(value) =>
+                          handleProductInput({
+                            target: { name: "category", value: value || "" },
+                          })
+                        }
+                        filterOption={(input, option) =>
+                          String((option && option.children) || "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                      >
+                        {categories.map((category) => (
+                          <Select.Option key={category.id} value={category.id}>
+                            {category.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                      {errors.category && (
+                        <span className="spec-field__error">
+                          {errors.category}
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+                  <Col md={6}>
+                    <div
+                      className={`spec-field${
+                        errors.brand ? " spec-field--error" : ""
+                      }`}
+                    >
+                      <label className="spec-field__label">
+                        Brand<span className="req">*</span>
+                      </label>
+                      <Select
+                        showSearch
+                        allowClear
+                        size="large"
+                        style={{ width: "100%" }}
+                        popupClassName="spec-dropdown"
+                        placeholder="Search & choose brand"
+                        optionFilterProp="children"
+                        value={fields.brand || undefined}
+                        onChange={(value) => {
+                          handleProductInput({
+                            target: { name: "brand", value: value || "" },
+                          });
+                          // Reset the dependent model when the brand changes.
+                          handleSpecChange("model", "");
+                        }}
+                        filterOption={(input, option) =>
+                          String((option && option.children) || "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                      >
+                        {mergedBrands.map((brand) => (
+                          <Select.Option key={brand.id} value={brand.id}>
+                            {brand.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                      {errors.brand && (
+                        <span className="spec-field__error">{errors.brand}</span>
+                      )}
+                    </div>
+                  </Col>
+
+                  {visibleSpecFields.map((field) => {
+                    const hasError = !!specErrors[field.name];
+                    // The Model field depends on the selected brand.
+                    const isModel = field.name === "model";
+                    const fieldOptions = isModel
+                      ? modelOptions
+                      : field.options;
+                    const modelDisabled = isModel && !selectedBrandName;
+                    const selectPlaceholder = isModel
+                      ? selectedBrandName
+                        ? `Search, pick or type a ${selectedBrandName} model`
+                        : "Select a brand first"
+                      : `Search & choose ${field.label.toLowerCase()}`;
+                    return (
+                      <Col md={6} key={field.name}>
+                        <div
+                          className={`spec-field${
+                            hasError ? " spec-field--error" : ""
+                          }`}
+                        >
+                          <label className="spec-field__label">
+                            {field.label}
+                            {field.required && <span className="req">*</span>}
+                          </label>
+                          {field.type === "text" ? (
+                            <AntInput
+                              size="large"
+                              placeholder={field.placeholder || field.label}
+                              value={specs[field.name] || ""}
+                              onChange={(e) =>
+                                handleSpecChange(field.name, e.target.value)
+                              }
+                            />
+                          ) : (
+                            <Select
+                              showSearch
+                              allowClear
+                              size="large"
+                              style={{ width: "100%" }}
+                              popupClassName="spec-dropdown"
+                              disabled={modelDisabled}
+                              notFoundContent="Type to add your own value"
+                              placeholder={selectPlaceholder}
+                              optionFilterProp="children"
+                              value={specs[field.name] || undefined}
+                              onSearch={(val) =>
+                                setFieldSearch((prev) => ({
+                                  ...prev,
+                                  [field.name]: val,
+                                }))
+                              }
+                              onChange={(value) => {
+                                handleSpecChange(field.name, value || "");
+                                setFieldSearch((prev) => ({
+                                  ...prev,
+                                  [field.name]: "",
+                                }));
+                              }}
+                              filterOption={(input, option) =>
+                                String((option && option.children) || "")
+                                  .toLowerCase()
+                                  .includes(input.toLowerCase())
+                              }
+                            >
+                              {isGroupedOptions(fieldOptions)
+                                ? fieldOptions.map((grp) => (
+                                    <Select.OptGroup
+                                      key={grp.label}
+                                      label={grp.label.toUpperCase()}
+                                    >
+                                      {grp.items.map((option) => (
+                                        <Select.Option
+                                          key={option}
+                                          value={option}
+                                        >
+                                          {option}
+                                        </Select.Option>
+                                      ))}
+                                    </Select.OptGroup>
+                                  ))
+                                : fieldOptions.map((option, key) => (
+                                    <Select.Option key={key} value={option}>
+                                      {option}
+                                    </Select.Option>
+                                  ))}
+                              {/* Let users add a value that isn't in the list */}
+                              {(fieldSearch[field.name] || "").trim() &&
+                                !optionExists(
+                                  fieldOptions,
+                                  (fieldSearch[field.name] || "").trim()
+                                ) && (
+                                  <Select.OptGroup label="ADD YOUR OWN">
+                                    <Select.Option
+                                      value={fieldSearch[field.name].trim()}
+                                    >
+                                      {fieldSearch[field.name].trim()}
+                                    </Select.Option>
+                                  </Select.OptGroup>
+                                )}
+                            </Select>
+                          )}
+                          {hasError && (
+                            <span className="spec-field__error">
+                              {specErrors[field.name]}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </div>
+              <div className="spec-section">
+                <div className="spec-section__title">
+                  Availability, Promotions &amp; Media
+                </div>
+
+                <Row>
+                  <Col md={6}>
+                    <div className="spec-field">
+                      <label className="spec-field__label">Availability</label>
+                      <label className="avail-toggle">
+                        <Input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={status}
+                          onChange={handleStatus}
+                        />
+                        <i className="input-helper"></i>
+                        <span className="avail-toggle__text">
+                          {status
+                            ? "Available / In stock"
+                            : "Unavailable / Out of stock"}
+                        </span>
+                      </label>
+                    </div>
+                  </Col>
+                  <Col md={6}>
+                    <div className="spec-field">
+                      <label className="spec-field__label">Other Sales</label>
+                      <Radio.Group
+                        className="sales-radio"
+                        onChange={handleOtherSaleChange}
+                        defaultValue={other_sales}
+                      >
+                        <Radio.Button value={null}>None</Radio.Button>
+                        <Radio.Button value="flash sales">
+                          Flash Sales
+                        </Radio.Button>
+                        <Radio.Button value="PRE-ORDER (24Hours)">
+                          PRE-ORDER (24Hours)
+                        </Radio.Button>
+                        <Radio.Button value="PRE-ORDER (7DAYS)">
+                          PRE-ORDER (7DAYS)
+                        </Radio.Button>
+                        <Radio.Button value="PRE-ORDER (21DAYS)">
+                          PRE-ORDER (21DAYS)
+                        </Radio.Button>
+                        <Radio.Button value="mid year sales">
+                          Mid Year Sales
+                        </Radio.Button>
+                        <Radio.Button value="promo sales">
+                          Promo Sales
+                        </Radio.Button>
+                        <Radio.Button value="black friday">
+                          Black Friday
+                        </Radio.Button>
+                      </Radio.Group>
+                    </div>
+                  </Col>
+                </Row>
+
+                <div className="spec-field">
+                  <label className="spec-field__label">Product Images</label>
+                  <div className="upload-area">
+                    <Button className="upload-btn" onClick={handleClick}>
                       Upload Product Images
                     </Button>
                     <input
@@ -963,14 +1342,14 @@ const AddProduct = ({ product, toggle, saved }) => {
                       multiple
                       accept="image/*"
                     />
-                    <div color="muted">
-                      You can only upload jpg, jpeg, and png type
-                    </div>
-                  </>
-                  <Row>
+                    <span className="upload-hint">
+                      You can only upload jpg, jpeg, and png files
+                    </span>
+                  </div>
+                  <Row className="image-grid">
                     {images.map((image, index) => (
                       <Col md={3} key={index}>
-                        <div style={{ position: "relative" }}>
+                        <div className="image-grid__item">
                           <img
                             style={{
                               transform:
@@ -982,16 +1361,7 @@ const AddProduct = ({ product, toggle, saved }) => {
                             src={URL.createObjectURL(image.blob)}
                             alt=""
                           />
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "50%",
-                              left: "50%",
-                              transform: "translate(-50%, -50%)",
-                              textAlign: "center",
-                              fontSize: "28px",
-                            }}
-                          >
+                          <div className="image-grid__actions">
                             <LoginOutlined
                               style={{ marginRight: "10px" }}
                               onClick={rotate(image, index)}
@@ -1003,152 +1373,27 @@ const AddProduct = ({ product, toggle, saved }) => {
                         </div>
                       </Col>
                     ))}
-                    {errors.images && (
-                      <div className="text-danger" style={{ fontSize: 12 }}>
-                        {errors.images}
-                      </div>
-                    )}
                   </Row>
-                  <Row>
-                    <Col md="7">
-                      <label className="label">Description</label>
-                      <ReactQuill
-                        theme="snow"
-                        value={description}
-                        onChange={handleDescription}
-                      />
+                  {errors.images && (
+                    <span className="spec-field__error">{errors.images}</span>
+                  )}
+                </div>
 
-                      <div>
-                        <span
-                          style={{
-                            paddingTop: 10,
-                            fontSize: 12,
-                            fontWeight: "bold",
-                          }}
-                          className="text-danger"
-                        >
-                          {errors.description}
-                        </span>
-                      </div>
-                    </Col>
-                  </Row>
-                  {/* <Row>
-                    <Select
-                      showSearch
-                      optionFilterProp="children"
-                      style={{ width: 200 }}
-                      placeholder="Search for a laptop property..."
-                    >
-                      {laptopProperties.map((property) => (
-                        <Select.OptGroup
-                          key={property.name}
-                          label={property.name}
-                        >
-                          {property.values.map((value) => (
-                            <Select.Option key={value} value={value}>
-                              {value}
-                            </Select.Option>
-                          ))}
-                        </Select.OptGroup>
-                      ))}
-                    </Select>
-                  </Row> */}
-                  <Row>
-                    <label
-                      className="label"
-                      style={{
-                        display: "block",
-                        paddingTop: 20,
-                        paddingBottom: 20,
-                      }}
-                    >
-                      Additional Information
-                    </label>
-
-                    {productInfos.map((productInfo, key) => (
-                      <Col
-                        md={12}
-                        style={{
-                          border: "1px #eee solid",
-                          padding: "10px 5px 0px 5px",
-                          margin: "15px 10px 0px 5px ",
-                          borderRadius: 7,
-                        }}
-                      >
-                        <Row style={{ margin: "15px 10px 0px 10px " }}>
-                          <Col md={12}>
-                            <Row>
-                              <Col md={5}>
-                                <Form.Group>
-                                  <Form.Label>Property</Form.Label>
-
-                                  <Input
-                                    type="text"
-                                    placeholder={`Product Property`}
-                                    value={productInfo.label}
-                                    onChange={(e) => handleInputChange(e, key)}
-                                    name="label"
-                                  />
-                                </Form.Group>
-                              </Col>
-                              <Col md={5}>
-                                <Form.Group>
-                                  <Form.Label>Values</Form.Label>
-                                  <Input
-                                    type="text"
-                                    name="value"
-                                    placeholder={`Property Value`}
-                                    value={productInfo.value}
-                                    onChange={(e) => handleInputChange(e, key)}
-                                  />
-                                </Form.Group>
-                              </Col>
-                              <Col md={2} style={{ marginTop: 30 }}>
-                                <ButtonGroup>
-                                  {productInfos.length - 1 === key && (
-                                    <Button
-                                      variant="outline-primary"
-                                      size="md"
-                                      onClick={handleAddProductInfo}
-                                    >
-                                      +
-                                    </Button>
-                                  )}
-                                  {productInfos.length !== 1 && (
-                                    <Button
-                                      variant="outline-danger"
-                                      size="md"
-                                      onClick={handleRemoveProductInfo(key)}
-                                    >
-                                      X
-                                    </Button>
-                                  )}
-                                </ButtonGroup>
-                              </Col>
-                            </Row>
-                          </Col>
-                        </Row>
-                      </Col>
-                    ))}
-                    {errors.label && (
-                      <div
-                        className="text-danger"
-                        style={{ fontSize: 12, display: "block" }}
-                      >
-                        {errors.label}
-                      </div>
-                    )}
-                    {errors.value && (
-                      <div
-                        className="text-danger"
-                        style={{ fontSize: 12, display: "block" }}
-                      >
-                        {errors.value}
-                      </div>
-                    )}
-                  </Row>
-                </Col>
-              </Row>
+                <div className="spec-field">
+                  <label className="spec-field__label">Description</label>
+                  <ReactQuill
+                    theme="snow"
+                    className="desc-quill"
+                    value={description}
+                    onChange={handleDescription}
+                  />
+                  {errors.description && (
+                    <span className="spec-field__error">
+                      {errors.description}
+                    </span>
+                  )}
+                </div>
+              </div>
               <div style={{ float: "right" }}>
                 <Button
                   className="btn btn-outline-dark btn-sm"
