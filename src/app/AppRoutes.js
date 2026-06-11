@@ -4,6 +4,7 @@ import { Switch, Route, Redirect } from "react-router-dom";
 import Spinner from "./shared/Spinner";
 import UserIndex from "./users/UserIndex";
 import AdminRoute from "./services/AdminRoute";
+import StaffRoute from "./services/StaffRoute";
 
 import Login from "./auth/Login";
 import Dashboard from "./dashboard/Dashboard";
@@ -29,20 +30,23 @@ class AppRoutes extends Component {
     return (
       <Suspense fallback={<Spinner />}>
         <Switch>
-          <AdminRoute exact path="/" component={Dashboard} />
-          <AdminRoute exact path="/dashboard" component={Dashboard} />
+          {/* Users menu is admin-only */}
           <AdminRoute exact path="/users" component={UserIndex} />
-          <AdminRoute exact path="/categories" component={CategoryIndex} />
-          <AdminRoute exact path="/brands" component={BrandIndex} />
-          <AdminRoute exact path="/blogs" component={BlogIndex} />
-          <AdminRoute exact path="/orders" component={CustomerOrderIndex} />
-          <AdminRoute exact path="/youtube" component={YoutubeIndex} />
-          <AdminRoute exact path="/prices" component={PriceIndex} />
-          <AdminRoute exact path="/referrers" component={ReferrerIndex} />
-          <AdminRoute exact path="/transactions" component={TransactionIndex} />
-          <AdminRoute exact path="/notice" component={NoticeIndex} />
 
-          <AdminRoute exact path="/products" component={ProductIndex} />
+          {/* All other menus are available to staff and admins */}
+          <StaffRoute exact path="/" component={Dashboard} />
+          <StaffRoute exact path="/dashboard" component={Dashboard} />
+          <StaffRoute exact path="/categories" component={CategoryIndex} />
+          <StaffRoute exact path="/brands" component={BrandIndex} />
+          <StaffRoute exact path="/blogs" component={BlogIndex} />
+          <StaffRoute exact path="/orders" component={CustomerOrderIndex} />
+          <StaffRoute exact path="/youtube" component={YoutubeIndex} />
+          <StaffRoute exact path="/prices" component={PriceIndex} />
+          <StaffRoute exact path="/referrers" component={ReferrerIndex} />
+          <StaffRoute exact path="/transactions" component={TransactionIndex} />
+          <StaffRoute exact path="/notice" component={NoticeIndex} />
+
+          <StaffRoute exact path="/products" component={ProductIndex} />
           <AuthRoute path="/auth/login" component={Login} />
           <AuthRoute path="/auth/register" component={Register} />
           <AuthRoute path="/auth/forgot-password" component={ForgotPassword} />

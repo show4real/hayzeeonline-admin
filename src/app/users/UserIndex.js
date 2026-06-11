@@ -13,18 +13,21 @@ import SpinDiv from "../components/SpinDiv";
 
 import { throttle, debounce } from "./debounce";
 import "antd/dist/reset.css";
-import { Pagination } from "antd";
+import { Pagination, Select } from "antd";
 import AddUser from "./AddUser";
 import EditUser from "./EditUser";
 import DeleteUser from "./DeleteUser";
 
 // import AddUser from "./AddUser";
 
+const { Option } = Select;
+
 export class UserIndex extends Component {
   constructor(props) {
     super(props);
     this.state = {
       search: "",
+      role: "",
       page: 1,
       rows: 10,
       loading: false,
@@ -40,10 +43,10 @@ export class UserIndex extends Component {
   }
 
   getUsers = () => {
-    const { page, rows, search, users } = this.state;
+    const { page, rows, search, role, users } = this.state;
     this.setState({ loading: true });
 
-    getUsers({ page, rows, search, users }).then(
+    getUsers({ page, rows, search, role, users }).then(
       (res) => {
         this.setState({
           users: res.users.data,
@@ -59,9 +62,9 @@ export class UserIndex extends Component {
   };
 
   searchUsers = () => {
-    const { page, rows, search } = this.state;
+    const { page, rows, search, role } = this.state;
     this.setState({ loading: false });
-    getUsers({ page, rows, search }).then(
+    getUsers({ page, rows, search, role }).then(
       (res) => {
         this.setState({
           users: res.users.data,
@@ -83,6 +86,11 @@ export class UserIndex extends Component {
   onPage = async (page, rows) => {
     await this.setState({ page, rows });
     await this.getUsers();
+  };
+
+  handleRoleChange = (role) => {
+    // Reset to the first page so the filtered result set lines up.
+    this.setState({ role: role || "", page: 1 }, this.getUsers);
   };
 
   handleSearch = (event) => {
@@ -125,6 +133,7 @@ export class UserIndex extends Component {
       page,
       rows,
       search,
+      role,
       loading,
       addUser,
       editUser,
@@ -213,7 +222,7 @@ export class UserIndex extends Component {
                   </Col>
                 </Row>
                 <Row>
-                  <Col lg="8">
+                  <Col lg="4">
                     <h4 className="card-title">
                       {" "}
                       Users{" "}
@@ -228,6 +237,20 @@ export class UserIndex extends Component {
                         ({total})
                       </span>
                     </h4>
+                  </Col>
+                  <Col lg="4" className="">
+                    <Select
+                      placeholder="Filter by role"
+                      value={role || undefined}
+                      onChange={this.handleRoleChange}
+                      allowClear
+                      style={{ width: "100%", marginBottom: 10 }}
+                    >
+                      <Option value="admin">Admin</Option>
+                      <Option value="staff">Staff</Option>
+                      <Option value="customer">Customer</Option>
+                      <Option value="referrer">Referrer</Option>
+                    </Select>
                   </Col>
                   <Col lg="4" className="">
                     <div style={{ display: "flex" }}>
@@ -280,7 +303,15 @@ export class UserIndex extends Component {
                               now={100}
                             />
                           </td>
-                          <td>{user.admin == 1 ? "Admin" : "Customer"}</td>
+                          <td>
+                            {user.admin == 1
+                              ? "Admin"
+                              : user.admin == 2
+                              ? "Staff"
+                              : user.admin == 0
+                              ? "Customer"
+                              : "Referrer"}
+                          </td>
                           <td>
                             <ButtonGroup>
                               <Button

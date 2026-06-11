@@ -1,0 +1,314 @@
+/* ============================================================
+   Product list page — clean, modern, Jumia/Amazon-style admin
+   ============================================================ */
+
+.plist-card {
+  border: 1px solid #eef0f4;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(17, 24, 39, 0.06);
+}
+
+/* ---- Header ---- */
+.plist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 6px 2px 18px;
+  border-bottom: 1px solid #f1f3f5;
+  margin-bottom: 22px;
+}
+
+.plist-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.plist-title__count {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  padding: 2px 10px;
+  vertical-align: middle;
+}
+
+.plist-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.plist-add-btn {
+  background: #0f172a !important;
+  border-color: #0f172a !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  height: 42px !important;
+  padding: 0 20px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.plist-add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.26);
+}
+
+/* ---- Filter toolbar ---- */
+.plist-filters {
+  background: #f9fafb;
+  border: 1px solid #eef0f4;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.plist-filter {
+  margin-bottom: 14px;
+}
+
+.plist-filter__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 7px;
+}
+
+/* antd controls inside the toolbar — roomy + rounded */
+.plist-filter .ant-select .ant-select-selector,
+.plist-filter .ant-input,
+.plist-filter .ant-input-affix-wrapper {
+  border-radius: 10px !important;
+  border-color: #e5e7eb !important;
+  min-height: 42px !important;
+}
+
+.plist-filter .ant-select .ant-select-selector {
+  display: flex;
+  align-items: center;
+}
+
+.plist-filter .ant-select:hover .ant-select-selector,
+.plist-filter .ant-input:hover,
+.plist-filter .ant-input-affix-wrapper:hover {
+  border-color: #93c5fd !important;
+}
+
+.plist-filter .ant-select-focused .ant-select-selector,
+.plist-filter .ant-input:focus,
+.plist-filter .ant-input-affix-wrapper-focused {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.plist-filters__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.plist-clear {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.plist-clear:hover {
+  text-decoration: underline;
+}
+
+.plist-search {
+  max-width: 320px;
+  width: 100%;
+}
+
+/* ---- Table ---- */
+.plist-table-wrap {
+  border: 1px solid #eef0f4;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.plist-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.plist-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef0f4;
+  white-space: nowrap;
+}
+
+.plist-table tbody td {
+  padding: 15px 18px;
+  font-size: 14px;
+  color: #1f2937;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+}
+
+.plist-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.plist-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.plist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.plist-name {
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: capitalize;
+}
+
+.plist-cat {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 3px 9px;
+  text-transform: capitalize;
+}
+
+.plist-price {
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.plist-price--old {
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.plist-date {
+  color: #6b7280;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ---- Status badge ---- */
+.plist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+.plist-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.plist-badge--available {
+  color: #15803d;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+}
+
+.plist-badge--sold {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* ---- Row actions ---- */
+.plist-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.plist-actions .ant-btn {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  height: 32px !important;
+}
+
+.plist-btn-view {
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
+
+.plist-btn-view:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+
+.plist-btn-delete {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+}
+
+.plist-btn-delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
+/* ---- Empty state ---- */
+.plist-empty {
+  text-align: center;
+  padding: 56px 20px;
+  color: #94a3b8;
+}
+
+.plist-empty__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.plist-empty__hint {
+  font-size: 13px;
+}
+
+/* ---- Footer / pagination ---- */
+.plist-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 18px 4px 4px;
+}

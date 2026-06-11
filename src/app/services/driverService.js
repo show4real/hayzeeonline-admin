@@ -21,7 +21,7 @@ export function getDrivers(data) {
     headers: authHeader(),
     body: JSON.stringify(data),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/drivers`, requestOptions).then(
       authService.handleResponse
     );
@@ -56,7 +56,7 @@ export function addDriver({
       is_active,
     }),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/adddriver`, requestOptions).then(
       authService.handleResponse
     );
@@ -92,7 +92,7 @@ export function editDriver({
     }),
   };
 
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(
       `${settings.API_URL}admin/updatedriver/${id}`,
       requestOptions
@@ -110,7 +110,7 @@ export function deleteDriver(id) {
     method: "POST",
     headers: authHeader(),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(
       `${settings.API_URL}admin/deletedriver/${id}`,
       requestOptions

@@ -21,7 +21,7 @@ export function getPayments(data) {
     headers: authHeader(),
     body: JSON.stringify(data),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/payments`, requestOptions).then(
       authService.handleResponse
     );

@@ -21,7 +21,7 @@ export function getOrders(data) {
     headers: authHeader(),
     body: JSON.stringify(data),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/orders`, requestOptions).then(
       authService.handleResponse
     );
@@ -63,7 +63,7 @@ export function editOrder({ id }) {
     }),
   };
 
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/updateorder`, requestOptions).then(
       authService.handleResponse
     );
@@ -210,7 +210,7 @@ export function deleteTransaction(id) {
     method: "POST",
     headers: authHeader(),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(
       `${settings.API_URL}delete/transaction/${id}`,
       requestOptions

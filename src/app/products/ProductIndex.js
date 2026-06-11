@@ -1,27 +1,12 @@
 import React, { useState, useEffect } from "react";
-import {
-  ProgressBar,
-  Row,
-  Col,
-  Breadcrumb,
-  ButtonGroup,
-} from "react-bootstrap";
-// import { Input } from "reactstrap";
+import { Row, Col, Breadcrumb, ButtonGroup } from "react-bootstrap";
 import { getProducts, getBrands, getAllCats } from "../services/productService";
 import SpinDiv from "../components/SpinDiv";
-import {
-  Pagination,
-  Select,
-  Slider,
-  InputNumber,
-  Button,
-  Checkbox,
-  Input,
-  Skeleton,
-} from "antd";
+import { Pagination, Select, Button, Input } from "antd";
 import EditProduct from "./EditProduct";
 import AddProduct from "./AddProduct";
 import DeleteProduct from "./DeleteProduct";
+import "./ProductList.css";
 
 const { Option } = Select;
 
@@ -39,264 +24,78 @@ const ProductIndex = () => {
   const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState(null);
   const [category, setCategory] = useState(null);
-  const [sort, setSorting] = useState(null);
-  const [price, setPrice] = useState([4000, 1000000]);
+  // Show available products first by default.
+  const [sort, setSorting] = useState("availability");
   const [storages, setStorages] = useState([]);
   const [processors, setProcessors] = useState([]);
   const [rams, setRams] = useState([]);
 
+  const formatNumber = (number) => {
+    if (number === null || number === undefined || number === "") return "0";
+    return number
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Any filter change should send us back to the first page so the result
+  // set we get back actually matches the new filters.
   const handleBrandChange = (value) => {
     setBrand(value);
+    setPage(1);
   };
 
   const handleCategoryChange = (value) => {
     setCategory(value);
-  };
-
-  const renderStorageDropdown = (menu) => {
-    return (
-      <div>
-        <div style={{ padding: "8px", fontWeight: "bold" }}>
-          <span>({storages.length}) Storage Selected</span>
-        </div>
-        {menu}
-      </div>
-    );
-  };
-
-  const renderProcessorDropdown = (menu) => {
-    return (
-      <div>
-        <div style={{ padding: "8px", fontWeight: "bold" }}>
-          <span>({processors.length}) Processor Selected</span>
-        </div>
-        {menu}
-      </div>
-    );
-  };
-
-  const renderRamDropdown = (menu) => {
-    return (
-      <div>
-        <div style={{ padding: "8px", fontWeight: "bold" }}>
-          <span>({rams.length}) RAM Selected</span>
-        </div>
-        {menu}
-      </div>
-    );
-  };
-
-  const formatNumber = (number) => {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    setPage(1);
   };
 
   const handleStorageChange = (selectedOptions) => {
     setStorages(selectedOptions);
-    fetchProducts();
+    setPage(1);
   };
 
   const handleProcessorChange = (selectedOptions) => {
     setProcessors(selectedOptions);
-    fetchProducts();
+    setPage(1);
   };
 
   const handleRamChange = (selectedOptions) => {
     setRams(selectedOptions);
-    fetchProducts();
+    setPage(1);
   };
 
-  const handleSorting = (sort) => {
-    setSorting(sort);
-    fetchProducts();
+  const handleSorting = (value) => {
+    setSorting(value);
+    setPage(1);
+  };
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value);
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setBrand(null);
+    setCategory(null);
+    setStorages([]);
+    setProcessors([]);
+    setRams([]);
+    setSorting("availability");
+    setSearch("");
+    setPage(1);
   };
 
   const fetchBrands = () => {
-    setLoading(true);
     getBrands().then(
-      (res) => {
-        setBrands(res.brands);
-        setLoading(false);
-      },
-      (error) => {
-        setLoading(false);
-      }
+      (res) => setBrands(res.brands),
+      () => {}
     );
   };
 
   const fetchCategories = () => {
-    setLoading(true);
     getAllCats().then(
-      (res) => {
-        setCategories(res.categories);
-        setLoading(false);
-      },
-      (error) => {
-        setLoading(false);
-      }
-    );
-  };
-
-  const storageSelect = () => {
-    return (
-      <Select
-        mode="multiple"
-        placeholder={
-          <span style={{ color: "#0E1B4D", fontWeight: "bold" }}>Storage</span>
-        }
-        value={storages}
-        onChange={handleStorageChange}
-        style={{ width: "100%", fontWeight: "bold", color: "#0E1B4D" }}
-        dropdownStyle={{ minWidth: 300 }}
-        dropdownRender={renderStorageDropdown}
-      >
-        {storagesList.map((option) => (
-          <Option key={option} value={option}>
-            {option}
-          </Option>
-        ))}
-      </Select>
-    );
-  };
-
-  const searchSelect = () => {
-    return (
-      <Input
-        placeholder="Search by other specifications..."
-        id="show"
-        autoFocus={false}
-        value={search}
-        style={{
-          color: "black",
-          marginBottom: 10,
-          fontWeight: "bold",
-          height: 34, // Set the height to reduce the input height
-          borderRadius: 5,
-          border: "1px solid #ccc",
-        }}
-        onChange={handleSearch}
-      />
-    );
-  };
-
-  const processorSelect = () => {
-    return (
-      <Select
-        mode="multiple"
-        placeholder={
-          <span style={{ color: "#0E1B4D", fontWeight: "bold" }}>
-            Processor
-          </span>
-        }
-        value={processors}
-        onChange={handleProcessorChange}
-        style={{ width: "100%", fontWeight: "bold", color: "#0E1B4D" }}
-        dropdownRender={renderProcessorDropdown}
-        dropdownStyle={{ minWidth: 300 }}
-      >
-        {processorsList.map((option) => (
-          <Checkbox value={option}>{option}</Checkbox>
-        ))}
-      </Select>
-    );
-  };
-  const ramSelect = () => {
-    return (
-      <Select
-        mode="multiple"
-        placeholder={
-          <span style={{ color: "#0E1B4D", fontWeight: "bold" }}>RAM</span>
-        }
-        value={rams}
-        onChange={handleRamChange}
-        style={{
-          width: "100%",
-          fontWeight: "bold",
-          color: "#0E1B4D",
-          border: "1px solid #d9d9d9",
-        }}
-        dropdownRender={renderRamDropdown}
-        dropdownStyle={{ minWidth: 300 }}
-      >
-        {ramsList.map((option) => (
-          <Checkbox value={option}>{option}</Checkbox>
-        ))}
-      </Select>
-    );
-  };
-
-  const brandSelect = () => {
-    return (
-      <Select
-        placeholder={
-          <span style={{ fontWeight: "bold", color: "black" }}>BRAND</span>
-        }
-        style={{ width: "100%", borderRadius: 20 }}
-        value={brand}
-        onChange={handleBrandChange}
-      >
-        <Option value="">All Brands</Option>
-        {brands.map((brand, index) => (
-          <Option key={index} value={brand.id}>
-            {brand.name}
-          </Option>
-        ))}
-      </Select>
-    );
-  };
-
-  const categorySelect = () => {
-    return (
-      <Select
-        placeholder={
-          <span style={{ fontWeight: "bold", color: "black" }}>Category</span>
-        }
-        style={{ width: "100%", borderRadius: 20 }}
-        value={category}
-        onChange={handleCategoryChange}
-      >
-        <Option value="">All Categories</Option>
-        {categories.map((category, index) => (
-          <Option key={index} value={category.id}>
-            {category.name}
-          </Option>
-        ))}
-      </Select>
-    );
-  };
-
-  const sortSelect = () => {
-    return (
-      <Select
-        placeholder={
-          <>
-            <span style={{ fontWeight: "bold", color: "#0E1B4D" }}>
-              Sort By
-            </span>
-            <span
-              style={{
-                fontWeight: "bold",
-                paddingLeft: "30%",
-                color: "#0E1B4D",
-              }}
-            >
-              Availability
-            </span>
-          </>
-        }
-        placement="bottomLeft"
-        style={{ width: "100%", border: "none", boxShadow: "none" }}
-        value={sort}
-        onChange={handleSorting}
-        dropdownStyle={{ minWidth: 300, textAlign: "center" }}
-      >
-        <option value="availability">Availability</option>
-        <option value="name-asc">Alphabetically, A-Z</option>
-        <option value="name-desc">Alphabetically, Z-A</option>
-        <option value="low-price">Price, low to high</option>
-        <option value="high-price">Price, high to low</option>
-        <option value="date-asc">Date, old to new</option>
-        <option value="date-desc">Date, new to old</option>
-      </Select>
+      (res) => setCategories(res.categories),
+      () => {}
     );
   };
 
@@ -340,6 +139,7 @@ const ProductIndex = () => {
     "Samsung’s Exynos",
     "Qualcomm’s snapdragon",
   ];
+
   const ramsList = [
     "2GB",
     "4GB",
@@ -356,10 +156,24 @@ const ProductIndex = () => {
     "1TB",
   ];
 
+  const sortOptions = [
+    { value: "availability", label: "Availability (Available first)" },
+    { value: "name-asc", label: "Alphabetically, A–Z" },
+    { value: "name-desc", label: "Alphabetically, Z–A" },
+    { value: "low-price", label: "Price, low to high" },
+    { value: "high-price", label: "Price, high to low" },
+    { value: "date-asc", label: "Date, old to new" },
+    { value: "date-desc", label: "Date, new to old" },
+  ];
+
   useEffect(() => {
-    fetchProducts();
     fetchBrands();
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rows, brand, rams, sort, storages, processors, category, search]);
 
   const fetchProducts = () => {
@@ -381,18 +195,7 @@ const ProductIndex = () => {
         setTotal(res.products.total);
         setLoading(false);
       })
-      .catch((error) => {
-        setLoading(false);
-      });
-  };
-
-  const searchProducts = (value) => {
-    setSearch(value);
-  };
-
-  const handleSearch = (event) => {
-    const value = event.target.value;
-    setSearch(value);
+      .catch(() => setLoading(false));
   };
 
   const onPageChange = (page, pageSize) => {
@@ -405,24 +208,24 @@ const ProductIndex = () => {
     fetchProducts();
   };
 
-  const toggleEditProduct = (product) => {
-    setEditProduct(product);
-    fetchProducts();
-  };
-
   const toggleEdit = () => {
     setEditProduct(null);
     fetchProducts();
-  };
-
-  const toggleDeleteProduct = (product) => {
-    setDeleteProduct(product);
   };
 
   const toggleDelete = () => {
     setDeleteProduct(null);
     fetchProducts();
   };
+
+  const hasActiveFilters =
+    brand ||
+    category ||
+    storages.length > 0 ||
+    processors.length > 0 ||
+    rams.length > 0 ||
+    search ||
+    sort !== "availability";
 
   return (
     <div>
@@ -444,198 +247,284 @@ const ProductIndex = () => {
         <DeleteProduct product={deleteProduct} toggle={toggleDelete} />
       )}
       {loading && <SpinDiv />}
+
       <div className="row">
         <div className="col-lg-12 grid-margin stretch-card">
-          <div className="card">
+          <div className="card plist-card">
             <div className="card-body">
-              <Row style={{}}>
-                <Col lg="12">
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
-                    <div className="d-block mb-4 mb-md-0">
-                      <Breadcrumb
-                        listProps={{
-                          className: " breadcrumb-text-dark text-primary",
-                        }}
-                      >
-                        <Breadcrumb.Item
-                          style={{
-                            textDecoration: "none",
-                            color: "black",
-                            fontWeight: "bold",
-                          }}
-                          href="/"
-                        >
-                          Home
-                        </Breadcrumb.Item>
-                        <Breadcrumb.Item
-                          style={{
-                            textDecoration: "none",
-                            color: "black",
-                            fontWeight: "bold",
-                          }}
-                          href="#products"
-                        >
-                          Products
-                        </Breadcrumb.Item>
-                      </Breadcrumb>
-                    </div>
-                    <div className="btn-toolbar mb-2 mb-md-0">
-                      <ButtonGroup>
-                        <Button
-                          style={{
-                            textDecoration: "none",
-                            color: "white",
-                            backgroundColor: "black",
-                            borderColor: "black",
-                            fontWeight: "bold",
-                          }}
-                          size="sm"
-                          onClick={toggleAddProduct}
-                        >
-                          Add product
-                        </Button>
-                      </ButtonGroup>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-              <Row style={{ marginBottom: 50 }}>
-                <div
-                  className={`col-xl-3 col-md-3 col-lg-3 col- product-filter`}
+              <Breadcrumb
+                listProps={{ className: "breadcrumb-text-dark text-primary" }}
+              >
+                <Breadcrumb.Item
+                  style={{ color: "#64748b", fontWeight: 600 }}
+                  href="/"
                 >
-                  {brandSelect()}
-                </div>
-                <div
-                  className={`col-xl-3 col-md-3 col-lg-3 col- product-filter`}
+                  Home
+                </Breadcrumb.Item>
+                <Breadcrumb.Item
+                  active
+                  style={{ color: "#0f172a", fontWeight: 700 }}
                 >
-                  {categorySelect()}
-                </div>
+                  Products
+                </Breadcrumb.Item>
+              </Breadcrumb>
 
-                <div
-                  className={`col-xl-3 col-md-3 col-lg-3 col-12 product-filter`}
-                >
-                  {processorSelect()}
-                </div>
-                <div
-                  className={`col-xl-3 col-md-3 col-lg-3 col-12 product-filter`}
-                >
-                  {ramSelect()}
-                </div>
-              </Row>
-              <Row style={{ justifyContent: "center", marginBottom: 50 }}>
-                <div
-                  className={`col-xl-3 col-md-3 col-lg-3 col-12 product-filter`}
-                >
-                  {storageSelect()}
-                </div>
-                <div
-                  className={`col-xl-4 col-md-4 col-lg-4 col-12 product-filter`}
-                >
-                  {sortSelect()}
-                </div>
-              </Row>
-              <Row>
-                <Col lg="8">
-                  <h4 className="card-title">
-                    Products{" "}
-                    <span
-                      style={{
-                        color: "#aaa",
-                        fontSize: 14,
-                        fontWeight: "normal",
-                      }}
-                    >
-                      ({total})
-                    </span>
+              {/* Header */}
+              <div className="plist-header">
+                <div>
+                  <h4 className="plist-title">
+                    Products
+                    <span className="plist-title__count">{total}</span>
                   </h4>
-                </Col>
-                <Col lg="4" className="">
-                  <div style={{ display: "flex" }}>
-                    <Input
-                      placeholder="Search..."
-                      autoFocus
-                      id="show"
-                      value={search}
-                      style={{
-                        maxHeight: 45,
-                        marginRight: 5,
-                        marginBottom: 10,
-                      }}
-                      onChange={handleSearch}
-                    />
-                  </div>
-                </Col>
-              </Row>
+                  <p className="plist-subtitle">
+                    Manage your catalogue — available items are shown first.
+                  </p>
+                </div>
+                <ButtonGroup>
+                  <Button
+                    className="plist-add-btn"
+                    onClick={toggleAddProduct}
+                  >
+                    + Add Product
+                  </Button>
+                </ButtonGroup>
+              </div>
 
-              <div className="table-responsive">
-                <table className="table table-nowrap ">
+              {/* Filters */}
+              <div className="plist-filters">
+                <Row>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">Brand</label>
+                    <Select
+                      placeholder="All Brands"
+                      style={{ width: "100%" }}
+                      value={brand}
+                      onChange={handleBrandChange}
+                      allowClear
+                    >
+                      {brands.map((b) => (
+                        <Option key={b.id} value={b.id}>
+                          {b.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">Category</label>
+                    <Select
+                      placeholder="All Categories"
+                      style={{ width: "100%" }}
+                      value={category}
+                      onChange={handleCategoryChange}
+                      allowClear
+                    >
+                      {categories.map((c) => (
+                        <Option key={c.id} value={c.id}>
+                          {c.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">Processor</label>
+                    <Select
+                      mode="multiple"
+                      placeholder="Any processor"
+                      style={{ width: "100%" }}
+                      value={processors}
+                      onChange={handleProcessorChange}
+                      maxTagCount="responsive"
+                    >
+                      {processorsList.map((option) => (
+                        <Option key={option} value={option}>
+                          {option}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">RAM</label>
+                    <Select
+                      mode="multiple"
+                      placeholder="Any RAM"
+                      style={{ width: "100%" }}
+                      value={rams}
+                      onChange={handleRamChange}
+                      maxTagCount="responsive"
+                    >
+                      {ramsList.map((option) => (
+                        <Option key={option} value={option}>
+                          {option}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">Storage</label>
+                    <Select
+                      mode="multiple"
+                      placeholder="Any storage"
+                      style={{ width: "100%" }}
+                      value={storages}
+                      onChange={handleStorageChange}
+                      maxTagCount="responsive"
+                    >
+                      {storagesList.map((option) => (
+                        <Option key={option} value={option}>
+                          {option}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                  <Col xs={12} md={6} lg={3} className="plist-filter">
+                    <label className="plist-filter__label">Sort by</label>
+                    <Select
+                      style={{ width: "100%" }}
+                      value={sort}
+                      onChange={handleSorting}
+                    >
+                      {sortOptions.map((option) => (
+                        <Option key={option.value} value={option.value}>
+                          {option.label}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+                  <Col xs={12} md={12} lg={6} className="plist-filter">
+                    <label className="plist-filter__label">Search</label>
+                    <Input
+                      placeholder="Search by name or specification…"
+                      value={search}
+                      onChange={handleSearch}
+                      allowClear
+                    />
+                  </Col>
+                </Row>
+                {hasActiveFilters && (
+                  <div className="plist-filters__footer">
+                    <span style={{ fontSize: 13, color: "#6b7280" }}>
+                      Showing filtered results
+                    </span>
+                    <button className="plist-clear" onClick={clearFilters}>
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Table */}
+              <div className="plist-table-wrap">
+                <table className="plist-table">
                   <thead>
                     <tr>
-                      <th> Product Name </th>
-                      <th> Category </th>
-                      <th> Price </th>
-                      <th> new price </th>
-                      <th> status </th>
-                      <th> date </th>
-                      <th>Action</th>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>New Price</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th style={{ textAlign: "right" }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => (
                       <tr key={product.id}>
-                        <td style={{ textTransform: "capitalize" }}>
-                          {product.name}{" "}
-                        </td>
-                        <td style={{ textTransform: "capitalize" }}>
-                          {product.category}{" "}
-                        </td>
-                        <td style={{ textTransform: "capitalize" }}>
-                          &#8358;{product.price}{" "}
-                        </td>
-                        <td style={{ textTransform: "capitalize" }}>
-                          &#8358;{product.new_price}{" "}
-                        </td>
-
                         <td>
-                          {product.availability == 1 ? "Available" : "Sold"}
+                          <span className="plist-name">{product.name}</span>
                         </td>
-                        <td>{product.created_at} </td>
                         <td>
-                          <ButtonGroup>
+                          {product.category ? (
+                            <span className="plist-cat">
+                              {product.category}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#cbd5e1" }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              product.new_price
+                                ? "plist-price plist-price--old"
+                                : "plist-price"
+                            }
+                          >
+                            &#8358;{formatNumber(product.price)}
+                          </span>
+                        </td>
+                        <td>
+                          {product.new_price ? (
+                            <span className="plist-price">
+                              &#8358;{formatNumber(product.new_price)}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#cbd5e1" }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              product.availability == 1
+                                ? "plist-badge plist-badge--available"
+                                : "plist-badge plist-badge--sold"
+                            }
+                          >
+                            {product.availability == 1 ? "Available" : "Sold"}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="plist-date">
+                            {product.created_at}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="plist-actions" style={{ justifyContent: "flex-end" }}>
                             <Button
-                              variant="outline-dark"
-                              onClick={() => toggleEditProduct(product)}
-                              size="sm"
+                              className="plist-btn-view"
+                              onClick={() => setEditProduct(product)}
+                              size="small"
                             >
                               View
                             </Button>
                             <Button
-                              variant="outline-dark"
-                              onClick={() => toggleDeleteProduct(product)}
-                              size="sm"
+                              className="plist-btn-delete"
+                              onClick={() => setDeleteProduct(product)}
+                              size="small"
                             >
                               Delete
                             </Button>
-                          </ButtonGroup>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <Row>
-                  <Col md={12} style={{ fontWeight: "bold", paddingTop: 3 }}>
-                    {products.length > 0 && (
-                      <Pagination
-                        total={total}
-                        showTotal={(total) => `Total ${total} products`}
-                        onChange={onPageChange}
-                        pageSize={rows}
-                        current={page}
-                      />
-                    )}
-                  </Col>
-                </Row>
+
+                {!loading && products.length === 0 && (
+                  <div className="plist-empty">
+                    <div className="plist-empty__title">No products found</div>
+                    <div className="plist-empty__hint">
+                      Try adjusting or clearing your filters.
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Pagination */}
+              {products.length > 0 && (
+                <div className="plist-footer">
+                  <Pagination
+                    total={total}
+                    showTotal={(total) => `Total ${total} products`}
+                    onChange={onPageChange}
+                    pageSize={rows}
+                    current={page}
+                    showSizeChanger
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

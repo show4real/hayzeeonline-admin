@@ -7,6 +7,7 @@ import Sidebar from "./shared/Sidebar";
 import SettingsPanel from "./shared/SettingsPanel";
 import Footer from "./shared/Footer";
 import { withTranslation } from "react-i18next";
+import { isSessionValid, isStaff, logout } from "./services/authService";
 
 import "antd/dist/reset.css";
 import "./style.css";
@@ -17,12 +18,32 @@ class App extends Component {
   };
   componentDidMount() {
     this.onRouteChanged();
+    this.enforceSession();
+    // Re-check every minute so the session is cleared at the 24-hour mark even
+    // if the user stays idle on the page.
+    this.sessionTimer = setInterval(this.enforceSession, 60 * 1000);
   }
+
+  componentWillUnmount() {
+    if (this.sessionTimer) {
+      clearInterval(this.sessionTimer);
+    }
+  }
+
+  // Clears an expired token and bounces the user back to login.
+  enforceSession = () => {
+    const { user } = this.state;
+    if (user && !isSessionValid()) {
+      logout();
+      this.setState({ user: null });
+      this.props.history.push("/auth/login");
+    }
+  };
 
   checkSideBar = () => {
     const { user } = this.state;
     let sidebarComponent;
-    if (!this.state.isFullPageLayout && user && user.admin == 1) {
+    if (!this.state.isFullPageLayout && user && isStaff()) {
       sidebarComponent = <Sidebar />;
     }
     return sidebarComponent;

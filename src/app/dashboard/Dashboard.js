@@ -722,7 +722,8 @@ export class Dashboard extends Component {
 
   __renderDashboards = () => {
     const { user } = this.state;
-    if (user !== null && user.admin == 1) {
+    // Admins (1) and staff (2) both see the dashboard.
+    if (user !== null && (user.admin == 1 || user.admin == 2)) {
       return this.adminDashboard();
     }
   };

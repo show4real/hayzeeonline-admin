@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Link, withRouter } from "react-router-dom";
 
 import { Trans } from "react-i18next";
+import { isAdmin } from "../services/authService";
 
 class Sidebar extends Component {
   state = {};
@@ -72,20 +73,23 @@ class Sidebar extends Component {
               </span>
             </Link>
           </li>
-          <li
-            className={
-              this.isPathActive("/users") ? "nav-item active" : "nav-item"
-            }
-          >
-            <Link className="nav-link" to="/users">
-              <span className="icon-bg">
-                <i className="mdi mdi-account-multiple-outline menu-icon"></i>
-              </span>
-              <span className="menu-title">
-                <Trans>Users</Trans>
-              </span>
-            </Link>
-          </li>
+          {/* Users menu is visible to admins only */}
+          {isAdmin() && (
+            <li
+              className={
+                this.isPathActive("/users") ? "nav-item active" : "nav-item"
+              }
+            >
+              <Link className="nav-link" to="/users">
+                <span className="icon-bg">
+                  <i className="mdi mdi-account-multiple-outline menu-icon"></i>
+                </span>
+                <span className="menu-title">
+                  <Trans>Users</Trans>
+                </span>
+              </Link>
+            </li>
+          )}
 
           <li
             className={

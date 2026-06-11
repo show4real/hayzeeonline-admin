@@ -21,7 +21,7 @@ export function getProducts(data) {
     headers: authHeader(),
     body: JSON.stringify(data),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}products`, requestOptions).then(
       authService.handleResponse
     );
@@ -54,7 +54,7 @@ export function addProduct({
       productInfos,
     }),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}store/product`, requestOptions).then(
       authService.handleResponse
     );
@@ -86,7 +86,7 @@ export function editProduct({
     }),
   };
 
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}updateproduct/${id}`, requestOptions).then(
       authService.handleResponse
     );
@@ -98,7 +98,7 @@ export function deleteProduct(id) {
     method: "POST",
     headers: authHeader(),
   };
-  if (authuser && authuser.admin == 1) {
+  if (authuser && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(
       `${settings.API_URL}delete/product/${id}`,
       requestOptions

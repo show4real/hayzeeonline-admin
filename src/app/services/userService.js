@@ -26,20 +26,14 @@ export function getUsers(data) {
   );
 }
 
-export function addUser({ name, email, password, address, phone, admin }) {
+export function addUser({ name, email, password, address, phone, role }) {
   const requestOptions = {
     method: "POST",
     headers: authHeader(),
-    body: JSON.stringify({
-      name,
-      email,
-      password,
-      address,
-      phone,
-      admin,
-    }),
+    // role is a string: customer | admin | staff | referrer
+    body: JSON.stringify({ name, email, password, address, phone, role }),
   };
-  return fetch(`${settings.API_URL}admin/adduser`, requestOptions).then(
+  return fetch(`${settings.API_URL}store/user`, requestOptions).then(
     authService.handleResponse
   );
 }
@@ -98,40 +92,21 @@ export function addImage({ image }) {
   );
 }
 
-export function editUser({
-  firstname,
-  lastname,
-  email,
-  password,
-  address,
-  phone,
-  is_active,
-  admin,
-  vendor,
-  customer,
-  id,
-}) {
+export function editUser({ name, email, password, address, phone, role, id }) {
+  // All fields optional; omit password to keep the current one.
+  const body = { name, email, address, phone, role };
+  if (password) {
+    body.password = password;
+  }
   const requestOptions = {
     method: "POST",
     headers: authHeader(),
-    body: JSON.stringify({
-      firstname,
-      lastname,
-      email,
-      password,
-      address,
-      phone,
-      is_active,
-      admin,
-      vendor,
-      customer,
-    }),
+    body: JSON.stringify(body),
   };
 
-  return fetch(
-    `${settings.API_URL}admin/updateuser/${id}`,
-    requestOptions
-  ).then(authService.handleResponse);
+  return fetch(`${settings.API_URL}update/user/${id}`, requestOptions).then(
+    authService.handleResponse
+  );
 }
 
 export function getUser(id) {
@@ -179,7 +154,7 @@ export function getDashboard() {
     method: "POST",
     headers: authHeader(),
   };
-  if (authuser !== null && authuser.admin == 1) {
+  if (authuser !== null && (authuser.admin == 1 || authuser.admin == 2)) {
     return fetch(`${settings.API_URL}admin/dashboard`, requestOptions).then(
       authService.handleResponse
     );

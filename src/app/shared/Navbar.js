@@ -2,12 +2,21 @@ import React, { Component } from "react";
 import { Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
+import { logout } from "../services/authService";
 
 class Navbar extends Component {
   toggleOffcanvas() {
     document.querySelector(".sidebar-offcanvas").classList.toggle("active");
   }
+
+  handleLogout = (evt) => {
+    evt.preventDefault();
+    logout();
+    // Full navigation so all in-memory state is cleared on sign out.
+    window.location.href = "/auth/login";
+  };
   render() {
+    const user = JSON.parse(localStorage.getItem("user"));
     return (
       <nav className="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
         <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
@@ -42,7 +51,7 @@ class Navbar extends Component {
                   </div>
                   <div className="nav-profile-text">
                     <p className="mb-1 text-black">
-                      <Trans>Henry Klein</Trans>
+                      {(user && user.name) || "Account"}
                     </p>
                   </div>
                 </Dropdown.Toggle>
@@ -76,11 +85,11 @@ class Navbar extends Component {
 
                     <Dropdown.Item
                       className="dropdown-item d-flex align-items-center justify-content-between"
-                      href="!#"
-                      onClick={(evt) => evt.preventDefault()}
+                      href="/auth/login"
+                      onClick={this.handleLogout}
                     >
                       <span>
-                        <Trans>Log Out</Trans>
+                        <Trans>Sign Out</Trans>
                       </span>
                       <i className="mdi mdi-logout ml-1"></i>
                     </Dropdown.Item>
