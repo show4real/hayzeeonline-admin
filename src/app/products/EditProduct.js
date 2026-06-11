@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Input } from "reactstrap";
 import { Col, Row, Form } from "react-bootstrap";
-import { Button, Radio, Select, Input as AntInput } from "antd";
+import { Button, Radio, Select } from "antd";
 import { LoginOutlined, DeleteOutlined } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -20,14 +20,13 @@ import SpinDiv from "../components/SpinDiv";
 import {
   productTypes,
   specFields,
-  isGroupedOptions,
   normalizeName,
   getModelOptions,
   mergeBrands,
   classifyCategory,
   getVisibleSpecFields,
-  optionExists,
 } from "./productSpecConfig";
+import SpecSelect from "./SpecSelect";
 
 const EditProduct = ({ product, toggle }) => {
   const [saving, setSaving] = useState(false);
@@ -59,8 +58,6 @@ const EditProduct = ({ product, toggle }) => {
     storage_capacity: product.storage || "",
   });
   const [specErrors, setSpecErrors] = useState({});
-  // Per-field typed text, so any spec field can offer an "add your own" value.
-  const [fieldSearch, setFieldSearch] = useState({});
   // Saved descriptions that don't map onto a known spec field are preserved here.
   const [extraInfos, setExtraInfos] = useState([]);
 
@@ -552,15 +549,10 @@ const EditProduct = ({ product, toggle }) => {
                         <label className="spec-field__label">
                           Brand<span className="req">*</span>
                         </label>
-                        <Select
-                          showSearch
-                          allowClear
-                          size="large"
-                          style={{ width: "100%" }}
-                          popupClassName="spec-dropdown"
-                          placeholder="Search & choose brand"
-                          optionFilterProp="children"
-                          value={fields.brand || undefined}
+                        <SpecSelect
+                          placeholder="Search, pick or type a brand"
+                          value={fields.brand}
+                          options={mergedBrands}
                           onChange={(value) => {
                             handleProductInput({
                               target: { name: "brand", value: value || "" },
@@ -568,18 +560,7 @@ const EditProduct = ({ product, toggle }) => {
                             // Reset the dependent model when the brand changes.
                             handleSpecChange("model", "");
                           }}
-                          filterOption={(input, option) =>
-                            String((option && option.children) || "")
-                              .toLowerCase()
-                              .includes(input.toLowerCase())
-                          }
-                        >
-                          {mergedBrands.map((brand) => (
-                            <Select.Option key={brand.id} value={brand.id}>
-                              {brand.name}
-                            </Select.Option>
-                          ))}
-                        </Select>
+                        />
                         {errors.brand && (
                           <span className="spec-field__error">
                             {errors.brand}
@@ -592,15 +573,13 @@ const EditProduct = ({ product, toggle }) => {
                       const hasError = !!specErrors[field.name];
                       // The Model field depends on the selected brand.
                       const isModel = field.name === "model";
-                      const fieldOptions = isModel
-                        ? modelOptions
-                        : field.options;
+                      const fieldOptions = isModel ? modelOptions : field.options;
                       const modelDisabled = isModel && !selectedBrandName;
                       const selectPlaceholder = isModel
                         ? selectedBrandName
                           ? `Search, pick or type a ${selectedBrandName} model`
                           : "Select a brand first"
-                        : `Search & choose ${field.label.toLowerCase()}`;
+                        : `Search, pick or type ${field.label.toLowerCase()}`;
                       return (
                         <Col md={6} key={field.name}>
                           <div
@@ -614,83 +593,15 @@ const EditProduct = ({ product, toggle }) => {
                                 <span className="req">*</span>
                               )}
                             </label>
-                            {field.type === "text" ? (
-                              <AntInput
-                                size="large"
-                                placeholder={field.placeholder || field.label}
-                                value={specs[field.name] || ""}
-                                onChange={(e) =>
-                                  handleSpecChange(field.name, e.target.value)
-                                }
-                              />
-                            ) : (
-                              <Select
-                                showSearch
-                                allowClear
-                                size="large"
-                                style={{ width: "100%" }}
-                                popupClassName="spec-dropdown"
-                                disabled={modelDisabled}
-                                notFoundContent="Type to add your own value"
-                                placeholder={selectPlaceholder}
-                                optionFilterProp="children"
-                                value={specs[field.name] || undefined}
-                                onSearch={(val) =>
-                                  setFieldSearch((prev) => ({
-                                    ...prev,
-                                    [field.name]: val,
-                                  }))
-                                }
-                                onChange={(value) => {
-                                  handleSpecChange(field.name, value || "");
-                                  setFieldSearch((prev) => ({
-                                    ...prev,
-                                    [field.name]: "",
-                                  }));
-                                }}
-                                filterOption={(input, option) =>
-                                  String((option && option.children) || "")
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase())
-                                }
-                              >
-                                {isGroupedOptions(fieldOptions)
-                                  ? fieldOptions.map((grp) => (
-                                      <Select.OptGroup
-                                        key={grp.label}
-                                        label={grp.label.toUpperCase()}
-                                      >
-                                        {grp.items.map((option) => (
-                                          <Select.Option
-                                            key={option}
-                                            value={option}
-                                          >
-                                            {option}
-                                          </Select.Option>
-                                        ))}
-                                      </Select.OptGroup>
-                                    ))
-                                  : fieldOptions.map((option, key) => (
-                                      <Select.Option key={key} value={option}>
-                                        {option}
-                                      </Select.Option>
-                                    ))}
-                                {/* Let users add a value not in the list */}
-                                {(fieldSearch[field.name] || "").trim() &&
-                                  !optionExists(
-                                    fieldOptions,
-                                    (fieldSearch[field.name] || "").trim()
-                                  ) && (
-                                    <Select.OptGroup label="ADD YOUR OWN">
-                                      <Select.Option
-                                        value={fieldSearch[field.name].trim()}
-                                      >
-                                        {fieldSearch[field.name].trim()}
-                                      </Select.Option>
-                                    </Select.OptGroup>
-                                  )}
-                              </Select>
-                            )}
+                            <SpecSelect
+                              placeholder={selectPlaceholder}
+                              value={specs[field.name]}
+                              options={fieldOptions}
+                              disabled={modelDisabled}
+                              onChange={(value) =>
+                                handleSpecChange(field.name, value || "")
+                              }
+                            />
                             {hasError && (
                               <span className="spec-field__error">
                                 {specErrors[field.name]}

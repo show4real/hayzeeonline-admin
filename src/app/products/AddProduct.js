@@ -13,8 +13,9 @@ import settings from "../services/settings";
 import { authService } from "../services/authService";
 import { getBrands, getCategories } from "../services/categoryService";
 import SpinDiv from "../components/SpinDiv";
-import { Select, Radio, Input as AntInput } from "antd";
+import { Select, Radio } from "antd";
 import { brandModels, fallbackBrandNames } from "./productSpecConfig";
+import SpecSelect from "./SpecSelect";
 
 const AddProduct = ({ product, toggle, saved }) => {
   const [images, setImages] = useState([]);
@@ -24,9 +25,6 @@ const AddProduct = ({ product, toggle, saved }) => {
   const [loading, setLoading] = useState(false);
   const [specs, setSpecs] = useState({});
   const [specErrors, setSpecErrors] = useState({});
-  // Tracks the text the user is typing per spec field, so any field can offer
-  // an "add your own" custom value when nothing in the list matches.
-  const [fieldSearch, setFieldSearch] = useState({});
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [other_sales, setOtherSales] = useState(null);
@@ -518,9 +516,6 @@ const AddProduct = ({ product, toggle, saved }) => {
     },
   ];
 
-  // Detects whether a field's options are grouped ({ label, items }) vs flat.
-  const isGroupedOptions = (opts) =>
-    Array.isArray(opts) && opts.length > 0 && typeof opts[0] === "object";
 
   // Backend brands merged with our fallback list (deduped by name). Backend
   // brands keep their numeric id; fallback-only brands use their name as value.
@@ -658,12 +653,6 @@ const AddProduct = ({ product, toggle, saved }) => {
   );
   const selectedBrandName = selectedBrand ? selectedBrand.name : "";
   const modelOptions = brandModels[normalizeName(selectedBrandName)] || [];
-  // Is the typed text already one of a field's options (flat or grouped)?
-  const optionExists = (options, value) =>
-    (isGroupedOptions(options)
-      ? options.reduce((acc, g) => acc.concat(g.items), [])
-      : options || []
-    ).some((opt) => normalizeName(opt) === normalizeName(value));
 
   // Resolve the selected category's kind, then the spec fields that apply to it.
   const selectedCategory = (categories || []).find(
@@ -1122,15 +1111,10 @@ const AddProduct = ({ product, toggle, saved }) => {
                       <label className="spec-field__label">
                         Brand<span className="req">*</span>
                       </label>
-                      <Select
-                        showSearch
-                        allowClear
-                        size="large"
-                        style={{ width: "100%" }}
-                        popupClassName="spec-dropdown"
-                        placeholder="Search & choose brand"
-                        optionFilterProp="children"
-                        value={fields.brand || undefined}
+                      <SpecSelect
+                        placeholder="Search, pick or type a brand"
+                        value={fields.brand}
+                        options={mergedBrands}
                         onChange={(value) => {
                           handleProductInput({
                             target: { name: "brand", value: value || "" },
@@ -1138,18 +1122,7 @@ const AddProduct = ({ product, toggle, saved }) => {
                           // Reset the dependent model when the brand changes.
                           handleSpecChange("model", "");
                         }}
-                        filterOption={(input, option) =>
-                          String((option && option.children) || "")
-                            .toLowerCase()
-                            .includes(input.toLowerCase())
-                        }
-                      >
-                        {mergedBrands.map((brand) => (
-                          <Select.Option key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
+                      />
                       {errors.brand && (
                         <span className="spec-field__error">{errors.brand}</span>
                       )}
@@ -1160,15 +1133,13 @@ const AddProduct = ({ product, toggle, saved }) => {
                     const hasError = !!specErrors[field.name];
                     // The Model field depends on the selected brand.
                     const isModel = field.name === "model";
-                    const fieldOptions = isModel
-                      ? modelOptions
-                      : field.options;
+                    const fieldOptions = isModel ? modelOptions : field.options;
                     const modelDisabled = isModel && !selectedBrandName;
                     const selectPlaceholder = isModel
                       ? selectedBrandName
                         ? `Search, pick or type a ${selectedBrandName} model`
                         : "Select a brand first"
-                      : `Search & choose ${field.label.toLowerCase()}`;
+                      : `Search, pick or type ${field.label.toLowerCase()}`;
                     return (
                       <Col md={6} key={field.name}>
                         <div
@@ -1180,83 +1151,15 @@ const AddProduct = ({ product, toggle, saved }) => {
                             {field.label}
                             {field.required && <span className="req">*</span>}
                           </label>
-                          {field.type === "text" ? (
-                            <AntInput
-                              size="large"
-                              placeholder={field.placeholder || field.label}
-                              value={specs[field.name] || ""}
-                              onChange={(e) =>
-                                handleSpecChange(field.name, e.target.value)
-                              }
-                            />
-                          ) : (
-                            <Select
-                              showSearch
-                              allowClear
-                              size="large"
-                              style={{ width: "100%" }}
-                              popupClassName="spec-dropdown"
-                              disabled={modelDisabled}
-                              notFoundContent="Type to add your own value"
-                              placeholder={selectPlaceholder}
-                              optionFilterProp="children"
-                              value={specs[field.name] || undefined}
-                              onSearch={(val) =>
-                                setFieldSearch((prev) => ({
-                                  ...prev,
-                                  [field.name]: val,
-                                }))
-                              }
-                              onChange={(value) => {
-                                handleSpecChange(field.name, value || "");
-                                setFieldSearch((prev) => ({
-                                  ...prev,
-                                  [field.name]: "",
-                                }));
-                              }}
-                              filterOption={(input, option) =>
-                                String((option && option.children) || "")
-                                  .toLowerCase()
-                                  .includes(input.toLowerCase())
-                              }
-                            >
-                              {isGroupedOptions(fieldOptions)
-                                ? fieldOptions.map((grp) => (
-                                    <Select.OptGroup
-                                      key={grp.label}
-                                      label={grp.label.toUpperCase()}
-                                    >
-                                      {grp.items.map((option) => (
-                                        <Select.Option
-                                          key={option}
-                                          value={option}
-                                        >
-                                          {option}
-                                        </Select.Option>
-                                      ))}
-                                    </Select.OptGroup>
-                                  ))
-                                : fieldOptions.map((option, key) => (
-                                    <Select.Option key={key} value={option}>
-                                      {option}
-                                    </Select.Option>
-                                  ))}
-                              {/* Let users add a value that isn't in the list */}
-                              {(fieldSearch[field.name] || "").trim() &&
-                                !optionExists(
-                                  fieldOptions,
-                                  (fieldSearch[field.name] || "").trim()
-                                ) && (
-                                  <Select.OptGroup label="ADD YOUR OWN">
-                                    <Select.Option
-                                      value={fieldSearch[field.name].trim()}
-                                    >
-                                      {fieldSearch[field.name].trim()}
-                                    </Select.Option>
-                                  </Select.OptGroup>
-                                )}
-                            </Select>
-                          )}
+                          <SpecSelect
+                            placeholder={selectPlaceholder}
+                            value={specs[field.name]}
+                            options={fieldOptions}
+                            disabled={modelDisabled}
+                            onChange={(value) =>
+                              handleSpecChange(field.name, value || "")
+                            }
+                          />
                           {hasError && (
                             <span className="spec-field__error">
                               {specErrors[field.name]}

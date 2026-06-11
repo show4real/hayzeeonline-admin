@@ -2,29 +2,31 @@
 .spec-section {
   background: #ffffff;
   border: 1px solid #eef0f4;
-  border-radius: 14px;
-  padding: 24px 24px 10px;
+  border-radius: 16px;
+  padding: 28px 28px 14px;
   margin-top: 26px;
-  box-shadow: 0 2px 14px rgba(17, 24, 39, 0.05);
+  box-shadow: 0 2px 16px rgba(17, 24, 39, 0.06);
 }
 
 .spec-section__title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 18px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 22px;
 }
 
 .spec-field {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .spec-field__label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
 }
 
 .spec-field__label .req {
@@ -40,11 +42,77 @@
   color: #ef4444;
 }
 
-/* Refine the antd Select / Input to feel modern and rounded */
+/* Refine the antd Select / Input to feel modern, roomy and rounded */
 .spec-field .ant-select .ant-select-selector,
 .spec-field .ant-input {
-  border-radius: 10px !important;
+  border-radius: 11px !important;
   border-color: #e5e7eb !important;
+}
+
+/* Roomier, more relaxing inputs with bolder text */
+.spec-field .ant-select-lg .ant-select-selector {
+  min-height: 48px !important;
+  padding: 7px 14px !important;
+  display: flex;
+  align-items: center;
+}
+
+.spec-field .ant-select-lg .ant-select-selection-search-input,
+.spec-field .ant-input-lg {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+/* The picked value reads as a confirmed, modern chip — clearly depicting the
+   choice with a check badge — whether it came from the list or was typed in. */
+.spec-field .ant-select-single .ant-select-selector .ant-select-selection-item {
+  align-self: center;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: calc(100% - 30px);
+  height: auto;
+  margin: 0;
+  padding: 3px 14px 3px 9px;
+  background: linear-gradient(180deg, #eff6ff 0%, #e0ecff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #1d4ed8 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 22px !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.12);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.spec-field .ant-select-single .ant-select-selection-item::before {
+  content: "✓";
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* Keep the chip readable on hover/focus of the field. */
+.spec-field .ant-select-focused .ant-select-selection-item,
+.spec-field .ant-select:hover .ant-select-selection-item {
+  border-color: #93c5fd;
+}
+
+.spec-field .ant-select-selection-placeholder,
+.spec-field .ant-input::placeholder {
+  font-weight: 500;
+  color: #9ca3af !important;
 }
 
 .spec-field .ant-select:hover .ant-select-selector,
@@ -97,13 +165,38 @@
   background: #eef2f9;
 }
 
+/* "+ Add your own" row: inviting, accented, always pinned at the top */
+.spec-dropdown .ant-select-item-option.spec-add-option {
+  color: #2563eb;
+  font-weight: 700;
+  background: #f5f9ff;
+  border-bottom: 1px solid #e3edff;
+}
+
+.spec-dropdown
+  .ant-select-item-option.spec-add-option.ant-select-item-option-active {
+  background: #e8f1ff;
+}
+
 .spec-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background: #eff6ff;
 }
 
 .spec-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   background: #dbeafe;
-  font-weight: 600;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+/* Trailing check on the currently selected row, mirroring the chip badge. */
+.spec-dropdown
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled)
+  .ant-select-item-option-content::after {
+  content: "✓";
+  float: right;
+  margin-left: 12px;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 /* ---- Availability toggle ---- */

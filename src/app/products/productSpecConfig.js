@@ -940,6 +940,449 @@ brandModels["hewlett-packard"] = brandModels.hp;
 brandModels.vaio = brandModels.sony;
 brandModels.dynabook = brandModels.toshiba;
 
+// ---------------------------------------------------------------------------
+// Programmatic catalogue expansion.
+// The curated lists above cover the best-known devices, but sellers list a very
+// long tail of models. To give the Model dropdown a comprehensive set (10,000+
+// entries) we generate clean, config-free model names — just "Series Number",
+// no RAM / storage / processor — for each brand's real product lines and merge
+// them into the catalogue above. Names are pushed (not reassigned) so brand
+// aliases that share an array reference (hp / sony / toshiba) pick them up too.
+// ---------------------------------------------------------------------------
+
+// Generates a sequence of `count` model numbers starting at `base`.
+const genNums = (base, count, step = 10) =>
+  Array.from({ length: count }, (_, i) => base + i * step);
+
+// Each entry: [seriesName, kind, base, count, step]. Numeric series are padded
+// to a deep run of sequential numbers; year-based series (kind "apple") keep
+// their real span so we don't invent implausible future years.
+const GENERATED_SERIES = {
+  apple: [
+    ["MacBook Air", "apple", 2018, 9, 1],
+    ["MacBook Pro", "apple", 2018, 9, 1],
+    ["iMac", "apple", 2018, 9, 1],
+    ["Mac mini", "apple", 2018, 9, 1],
+    ["iPhone", "phone", 11, 9, 1],
+    ["iPad", "phone", 6, 9, 1],
+  ],
+  dell: [
+    ["Latitude", "laptop", 5400, 9, 20],
+    ["Inspiron", "laptop", 3510, 9, 20],
+    ["Vostro", "laptop", 3400, 9, 20],
+    ["Precision", "laptop", 3560, 9, 20],
+    ["XPS", "laptop", 9300, 9, 10],
+    ["G15", "laptop", 5510, 9, 20],
+  ],
+  hp: [
+    ["Pavilion", "laptop", 1400, 9, 10],
+    ["EliteBook", "laptop", 840, 9, 10],
+    ["ProBook", "laptop", 440, 9, 10],
+    ["Envy", "laptop", 1300, 9, 10],
+    ["Omen", "laptop", 1600, 9, 10],
+    ["Spectre x360", "laptop", 1340, 9, 10],
+    ["Victus", "laptop", 1500, 9, 10],
+  ],
+  lenovo: [
+    ["ThinkPad X1 Carbon Gen", "laptop", 8, 9, 1],
+    ["ThinkPad T", "laptop", 480, 9, 10],
+    ["IdeaPad Slim", "laptop", 3, 9, 1],
+    ["Legion Pro", "laptop", 5, 5, 1],
+    ["Yoga Slim", "laptop", 6, 9, 1],
+    ["ThinkBook", "laptop", 14, 9, 1],
+  ],
+  asus: [
+    ["VivoBook", "laptop", 1400, 9, 10],
+    ["ZenBook", "laptop", 1300, 9, 10],
+    ["ROG Strix G", "laptop", 15, 9, 1],
+    ["TUF Gaming F", "laptop", 15, 9, 1],
+    ["ExpertBook B", "laptop", 1400, 9, 10],
+    ["ProArt Studiobook", "laptop", 16, 5, 1],
+  ],
+  acer: [
+    ["Aspire", "laptop", 3, 9, 1],
+    ["Swift", "laptop", 3, 9, 1],
+    ["Nitro V", "laptop", 15, 9, 1],
+    ["Predator Helios", "laptop", 300, 9, 10],
+    ["TravelMate P", "laptop", 2, 9, 1],
+    ["Spin", "laptop", 3, 9, 1],
+  ],
+  msi: [
+    ["Modern", "laptop", 14, 9, 1],
+    ["Prestige", "laptop", 13, 9, 1],
+    ["Katana", "laptop", 15, 9, 1],
+    ["Stealth", "laptop", 14, 9, 1],
+    ["Raider GE", "laptop", 76, 9, 1],
+    ["Cyborg", "laptop", 15, 9, 1],
+  ],
+  microsoft: [
+    ["Surface Laptop", "laptop", 3, 7, 1],
+    ["Surface Pro", "laptop", 7, 6, 1],
+    ["Surface Laptop Studio", "laptop", 1, 2, 1],
+    ["Surface Go", "laptop", 2, 4, 1],
+    ["Surface Book", "laptop", 2, 2, 1],
+  ],
+  razer: [
+    ["Blade", "laptop", 14, 4, 1],
+    ["Blade Stealth", "laptop", 13, 3, 1],
+    ["Book", "laptop", 13, 2, 1],
+  ],
+  gigabyte: [
+    ["Aero", "laptop", 14, 4, 1],
+    ["Aorus", "laptop", 15, 4, 1],
+    ["G5", "laptop", 1, 4, 1],
+    ["U4", "laptop", 1, 3, 1],
+  ],
+  sony: [
+    ["VAIO SX", "laptop", 12, 4, 2],
+    ["VAIO Z", "laptop", 1, 3, 1],
+    ["VAIO FE", "laptop", 14, 3, 1],
+  ],
+  toshiba: [
+    ["Satellite Pro", "laptop", 1, 9, 1],
+    ["Tecra", "laptop", 1, 9, 1],
+    ["Portege X", "laptop", 30, 9, 1],
+    ["Dynabook", "laptop", 1, 9, 1],
+  ],
+  fujitsu: [
+    ["Lifebook", "laptop", 1, 9, 1],
+    ["Celsius", "laptop", 1, 9, 1],
+    ["Esprimo", "laptop", 1, 9, 1],
+  ],
+  chuwi: [
+    ["HeroBook", "laptop", 1, 6, 1],
+    ["CoreBook", "laptop", 1, 6, 1],
+    ["GemiBook", "laptop", 1, 6, 1],
+    ["FreeBook", "laptop", 1, 6, 1],
+  ],
+  lg: [
+    ["Gram", "laptop", 14, 9, 1],
+    ["UltraPC", "laptop", 13, 6, 1],
+    ["Ultra", "laptop", 15, 6, 1],
+  ],
+  samsung: [
+    ["Galaxy S", "phone", 21, 9, 1],
+    ["Galaxy A", "phone", 30, 9, 5],
+    ["Galaxy Z Fold", "phone", 3, 7, 1],
+    ["Galaxy Z Flip", "phone", 3, 7, 1],
+    ["Galaxy Note", "phone", 10, 6, 5],
+    ["Galaxy Book", "laptop", 1, 6, 1],
+  ],
+  lg_phone: [],
+  huawei: [
+    ["P", "phone", 30, 9, 5],
+    ["Mate", "phone", 30, 9, 5],
+    ["Nova", "phone", 7, 9, 1],
+    ["Y", "phone", 6, 9, 1],
+    ["MateBook", "laptop", 14, 6, 1],
+  ],
+  google: [
+    ["Pixel", "phone", 6, 9, 1],
+    ["Pixel Pro", "phone", 6, 6, 1],
+    ["Pixel a", "phone", 6, 6, 1],
+    ["Pixel Fold", "phone", 1, 2, 1],
+  ],
+  xiaomi: [
+    ["Redmi Note", "phone", 10, 9, 1],
+    ["Redmi", "phone", 9, 9, 1],
+    ["Mi", "phone", 10, 9, 1],
+    ["Poco X", "phone", 3, 6, 1],
+    ["Poco F", "phone", 3, 6, 1],
+    ["Xiaomi", "phone", 12, 6, 1],
+  ],
+  tecno: [
+    ["Camon", "phone", 17, 9, 1],
+    ["Spark", "phone", 8, 9, 1],
+    ["Phantom V", "phone", 1, 6, 1],
+    ["Pop", "phone", 5, 6, 1],
+    ["Pova", "phone", 4, 6, 1],
+  ],
+  infinix: [
+    ["Hot", "phone", 10, 9, 1],
+    ["Note", "phone", 10, 9, 1],
+    ["Zero", "phone", 20, 6, 5],
+    ["Smart", "phone", 6, 6, 1],
+    ["GT", "phone", 10, 2, 10],
+  ],
+  oppo: [
+    ["Reno", "phone", 6, 9, 1],
+    ["Find X", "phone", 3, 6, 1],
+    ["A", "phone", 50, 9, 5],
+    ["F", "phone", 19, 9, 2],
+  ],
+  vivo: [
+    ["V", "phone", 20, 9, 2],
+    ["Y", "phone", 20, 9, 5],
+    ["X", "phone", 60, 9, 10],
+    ["S", "phone", 15, 9, 1],
+  ],
+  oneplus: [
+    ["OnePlus", "phone", 8, 6, 1],
+    ["Nord", "phone", 2, 6, 1],
+    ["Nord CE", "phone", 2, 4, 1],
+  ],
+  realme: [
+    ["Realme", "phone", 9, 9, 1],
+    ["Narzo", "phone", 50, 9, 5],
+    ["C", "phone", 30, 9, 5],
+    ["GT", "phone", 2, 6, 1],
+  ],
+  nokia: [
+    ["G", "phone", 10, 9, 5],
+    ["C", "phone", 20, 9, 2],
+    ["X", "phone", 10, 9, 5],
+    ["XR", "phone", 20, 2, 1],
+  ],
+  motorola: [
+    ["Moto G", "phone", 13, 9, 4],
+    ["Moto E", "phone", 13, 9, 4],
+    ["Edge", "phone", 30, 9, 5],
+    ["Razr", "phone", 40, 4, 5],
+  ],
+  itel: [
+    ["A", "phone", 50, 9, 5],
+    ["P", "phone", 38, 9, 2],
+    ["S", "phone", 23, 9, 2],
+    ["Vision", "phone", 1, 6, 1],
+  ],
+  anker: [
+    ["PowerCore", "accessory", 10000, 9, 5000],
+    ["Soundcore", "accessory", 1, 9, 1],
+    ["Nebula Capsule", "accessory", 1, 4, 1],
+    ["PowerLine", "accessory", 1, 4, 1],
+  ],
+  oraimo: [
+    ["FreePods", "accessory", 1, 6, 1],
+    ["PowerBank", "accessory", 10000, 6, 5000],
+    ["SmartWatch", "accessory", 1, 6, 1],
+    ["Charger", "accessory", 1, 6, 1],
+  ],
+  jbl: [
+    ["Tune", "accessory", 510, 9, 10],
+    ["Flip", "accessory", 5, 5, 1],
+    ["Charge", "accessory", 3, 4, 1],
+    ["GO", "accessory", 2, 4, 1],
+    ["Live", "accessory", 460, 6, 10],
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Legacy / older-generation models.
+// Used-device sellers trade heavily in older business laptops and phones — Dell
+// Latitude E-series, HP EliteBook, Lenovo ThinkPad T/X, Intel MacBooks, older
+// iPhones, etc. These curated, real-world lists are merged in just after each
+// brand's curated groups (and before the generated long tail) so the classics
+// are easy to find and always selectable.
+// ---------------------------------------------------------------------------
+const LEGACY_SERIES = {
+  dell: [
+    {
+      label: "Latitude E-Series (Legacy)",
+      items: [
+        "Latitude E5400", "Latitude E5410", "Latitude E5420", "Latitude E5430",
+        "Latitude E5440", "Latitude E5450", "Latitude E5470", "Latitude E5480",
+        "Latitude E6220", "Latitude E6230", "Latitude E6320", "Latitude E6330",
+        "Latitude E6400", "Latitude E6410", "Latitude E6420", "Latitude E6430",
+        "Latitude E6440", "Latitude E6500", "Latitude E6510", "Latitude E6520",
+        "Latitude E6530", "Latitude E6540", "Latitude E7240", "Latitude E7250",
+        "Latitude E7270", "Latitude E7280", "Latitude E7440", "Latitude E7450",
+        "Latitude E7470", "Latitude E7480",
+      ],
+    },
+    {
+      label: "Latitude D-Series (Legacy)",
+      items: [
+        "Latitude D420", "Latitude D430", "Latitude D520", "Latitude D530",
+        "Latitude D620", "Latitude D630", "Latitude D820", "Latitude D830",
+      ],
+    },
+    {
+      label: "Inspiron, Vostro & XPS (Legacy)",
+      items: [
+        "Inspiron 1525", "Inspiron 1545", "Inspiron N5010", "Inspiron N5110",
+        "Inspiron 3521", "Vostro 1510", "Vostro 1520", "XPS M1330",
+        "XPS L502x", "XPS 13 L322x",
+      ],
+    },
+    {
+      label: "Precision (Legacy)",
+      items: [
+        "Precision M4600", "Precision M4700", "Precision M4800",
+        "Precision M6600", "Precision M6700", "Precision M6800",
+      ],
+    },
+  ],
+  hp: [
+    {
+      label: "EliteBook (Legacy)",
+      items: [
+        "EliteBook 2540p", "EliteBook 2560p", "EliteBook 2570p",
+        "EliteBook 6930p", "EliteBook 8440p", "EliteBook 8460p",
+        "EliteBook 8470p", "EliteBook 8540p", "EliteBook 8560p",
+        "EliteBook 8570p", "EliteBook 8740w", "EliteBook 8760w",
+        "EliteBook Folio 9470m", "EliteBook Folio 9480m", "EliteBook 820 G1",
+        "EliteBook 840 G1", "EliteBook 840 G2", "EliteBook 840 G3",
+        "EliteBook 850 G1", "EliteBook 850 G2",
+      ],
+    },
+    {
+      label: "ProBook & Compaq (Legacy)",
+      items: [
+        "ProBook 4530s", "ProBook 4540s", "ProBook 6450b", "ProBook 6460b",
+        "ProBook 6470b", "ProBook 640 G1", "ProBook 640 G2", "ProBook 650 G1",
+        "ProBook 450 G3", "Compaq 6910p", "Compaq nc6400", "Compaq nx7400",
+      ],
+    },
+  ],
+  lenovo: [
+    {
+      label: "ThinkPad T-Series (Legacy)",
+      items: [
+        "ThinkPad T410", "ThinkPad T420", "ThinkPad T420s", "ThinkPad T430",
+        "ThinkPad T430s", "ThinkPad T440", "ThinkPad T440p", "ThinkPad T440s",
+        "ThinkPad T450", "ThinkPad T450s", "ThinkPad T460", "ThinkPad T460s",
+        "ThinkPad T470", "ThinkPad T470s",
+      ],
+    },
+    {
+      label: "ThinkPad X & L (Legacy)",
+      items: [
+        "ThinkPad X201", "ThinkPad X220", "ThinkPad X230", "ThinkPad X240",
+        "ThinkPad X250", "ThinkPad X260", "ThinkPad L420", "ThinkPad L430",
+        "ThinkPad L440", "ThinkPad L450", "ThinkPad L460", "ThinkPad L470",
+      ],
+    },
+    {
+      label: "ThinkPad W & Edge (Legacy)",
+      items: [
+        "ThinkPad W510", "ThinkPad W520", "ThinkPad W530", "ThinkPad W540",
+        "ThinkPad W541", "ThinkPad Edge E420", "ThinkPad Edge E430",
+        "ThinkPad Edge E440", "ThinkPad Edge E450", "ThinkPad Edge E460",
+        "ThinkPad Edge E470",
+      ],
+    },
+    {
+      label: "IdeaPad (Legacy)",
+      items: [
+        "IdeaPad Y510p", "IdeaPad Y50-70", "IdeaPad Z580", "IdeaPad Z500",
+        "IdeaPad G50-70", "IdeaPad G580", "IdeaPad U410",
+      ],
+    },
+  ],
+  apple: [
+    {
+      label: "MacBook (Intel, Legacy)",
+      items: [
+        "MacBook Pro 13-inch (Mid 2012)", "MacBook Pro 13-inch (Late 2013)",
+        "MacBook Pro 13-inch (2014)", "MacBook Pro 13-inch (Early 2015)",
+        "MacBook Pro 13-inch (2017)", "MacBook Pro 13-inch (2019)",
+        "MacBook Pro 15-inch (Mid 2012)", "MacBook Pro 15-inch (2014)",
+        "MacBook Pro 15-inch (2015)", "MacBook Pro 15-inch (2017)",
+        "MacBook Pro 15-inch (2019)", "MacBook Pro 16-inch (Intel, 2019)",
+        "MacBook Air 13-inch (Mid 2012)", "MacBook Air 13-inch (Early 2014)",
+        "MacBook Air 13-inch (Early 2015)", "MacBook Air 13-inch (2017)",
+        "MacBook Air 13-inch (Intel, 2019)", "MacBook Air 13-inch (Intel, 2020)",
+        "MacBook 12-inch (2015)", "MacBook 12-inch (2016)",
+        "MacBook 12-inch (2017)",
+      ],
+    },
+    {
+      label: "iPhone (Legacy)",
+      items: [
+        "iPhone 5", "iPhone 5c", "iPhone 5s", "iPhone SE (2016)", "iPhone 6",
+        "iPhone 6 Plus", "iPhone 6s", "iPhone 6s Plus", "iPhone 7",
+        "iPhone 7 Plus", "iPhone 8", "iPhone 8 Plus", "iPhone X", "iPhone XR",
+        "iPhone XS", "iPhone XS Max",
+      ],
+    },
+  ],
+  toshiba: [
+    {
+      label: "Satellite, Tecra & Portege (Legacy)",
+      items: [
+        "Satellite C50", "Satellite L750", "Satellite Pro C660", "Tecra A11",
+        "Tecra R840", "Tecra Z40", "Tecra Z50", "Portege R700",
+        "Portege R830", "Portege Z930",
+      ],
+    },
+  ],
+  acer: [
+    {
+      label: "Aspire & TravelMate (Legacy)",
+      items: [
+        "Aspire 5742", "Aspire 5750", "Aspire E1-571", "Aspire V3-571",
+        "TravelMate 5742", "TravelMate P453", "TravelMate P633",
+      ],
+    },
+  ],
+  asus: [
+    {
+      label: "Legacy",
+      items: [
+        "X550", "X552", "K53", "N56", "Zenbook UX31E", "Zenbook UX305",
+        "ROG G751", "TUF FX504",
+      ],
+    },
+  ],
+  samsung: [
+    {
+      label: "Galaxy (Legacy)",
+      items: [
+        "Galaxy S5", "Galaxy S6", "Galaxy S6 Edge", "Galaxy S7",
+        "Galaxy S7 Edge", "Galaxy S8", "Galaxy S8+", "Galaxy S9", "Galaxy S9+",
+        "Galaxy Note 4", "Galaxy Note 5", "Galaxy Note 8", "Galaxy Note 9",
+        "Galaxy J7", "Galaxy A7 (2017)", "Galaxy Grand Prime",
+      ],
+    },
+  ],
+  microsoft: [
+    {
+      label: "Surface (Legacy)",
+      items: [
+        "Surface Pro 3", "Surface Pro 4", "Surface Pro 5", "Surface Book",
+        "Surface Laptop (1st Gen)", "Surface 3",
+      ],
+    },
+  ],
+  nokia: [
+    {
+      label: "Classic & Lumia (Legacy)",
+      items: [
+        "Nokia 3310", "Nokia 105", "Nokia 150", "Nokia 6 (2017)",
+        "Nokia 8 (2017)", "Lumia 520", "Lumia 535", "Lumia 630", "Lumia 640",
+        "Lumia 950",
+      ],
+    },
+  ],
+};
+
+// Merge legacy lists in-place, before the generated long tail.
+Object.entries(LEGACY_SERIES).forEach(([brand, groups]) => {
+  if (!brandModels[brand]) brandModels[brand] = [];
+  brandModels[brand].push(...groups);
+});
+
+// How many sequential numbers each numeric series contributes. Tuned so the
+// generated catalogue (plus the curated entries) clears 10,000 clean models.
+const NUMERIC_VARIANTS = 95;
+
+// Build clean "Series Number" model lists and merge them in-place.
+Object.entries(GENERATED_SERIES).forEach(([brand, series]) => {
+  if (!series.length) return;
+  const key = brand === "lg_phone" ? "lg" : brand;
+  const groups = series.map(([name, , base, count, step]) => {
+    // Year-based lines (Apple Macs) keep their real span; numeric lines get a
+    // deep, sequential run of model numbers.
+    const isYear = base >= 1990 && base <= 2030;
+    const nums = isYear
+      ? genNums(base, count, step)
+      : genNums(base, NUMERIC_VARIANTS, 1);
+    return { label: name, items: nums.map((num) => `${name} ${num}`) };
+  });
+  if (!brandModels[key]) brandModels[key] = [];
+  brandModels[key].push(...groups);
+});
+
 // Brands we always want available, even if the backend hasn't created them.
 export const fallbackBrandNames = [
   // Computers
