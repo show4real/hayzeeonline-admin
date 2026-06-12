@@ -46,6 +46,17 @@
   border: 1px solid #fde68a;
 }
 
+/* ---- Horizontal scroll so the Action column stays reachable ---- */
+.plist-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.plist-table-wrap .plist-table {
+  min-width: 980px;
+}
+
 /* ---- Extra status badge variants ---- */
 .plist-badge--pending {
   color: #b45309;
