@@ -69,10 +69,6 @@ const AddBrand = ({ addBrand, toggle }) => {
       }
     });
 
-    if (image === "") {
-      validationErrors.image = "Image is required";
-    }
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -83,7 +79,9 @@ const AddBrand = ({ addBrand, toggle }) => {
     console.log(image);
 
     data.set("name", fields.name);
-    data.append(`image`, image);
+    if (image) {
+      data.append(`image`, image);
+    }
 
     return axios
       .post(

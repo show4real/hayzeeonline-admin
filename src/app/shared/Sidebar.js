@@ -194,50 +194,6 @@ class Sidebar extends Component {
               </span>
             </Link>
           </li>
-          <li
-            className={
-              this.isPathActive("/transactions")
-                ? "nav-item active"
-                : "nav-item"
-            }
-          >
-            <Link className="nav-link" to="/transactions">
-              <span className="icon-bg">
-                <i className="mdi mdi-shopping menu-icon"></i>
-              </span>
-              <span className="menu-title">
-                <Trans>Transactions</Trans>
-              </span>
-            </Link>
-          </li>
-          <li
-            className={
-              this.isPathActive("/youtube") ? "nav-item active" : "nav-item"
-            }
-          >
-            <Link className="nav-link" to="/youtube">
-              <span className="icon-bg">
-                <i className="mdi mdi-shopping menu-icon"></i>
-              </span>
-              <span className="menu-title">
-                <Trans>Youtube</Trans>
-              </span>
-            </Link>
-          </li>
-          <li
-            className={
-              this.isPathActive("/notice") ? "nav-item active" : "nav-item"
-            }
-          >
-            <Link className="nav-link" to="/notice">
-              <span className="icon-bg">
-                <i className="mdi mdi-shopping menu-icon"></i>
-              </span>
-              <span className="menu-title">
-                <Trans>Notices</Trans>
-              </span>
-            </Link>
-          </li>
         </ul>
       </nav>
     );
